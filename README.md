@@ -109,6 +109,32 @@ terraform -chdir=terraform/hcp-vault-aws/vault-cluster apply
 terraform -chdir=terraform/aws apply
 ```
 
+## GitHub Actions (On-Demand)
+
+Two separate manual workflows are included:
+
+- `.github/workflows/deploy-aws.yml`
+- `.github/workflows/deploy-hcp-vault-cluster.yml`
+
+These workflows run only when manually triggered (`workflow_dispatch`) from the GitHub Actions tab.
+
+Required repository secrets:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_REGION`
+- `HCP_CLIENT_ID`
+- `HCP_CLIENT_SECRET`
+- `HCP_PROJECT_ID`
+
+How to run:
+
+1. Open **GitHub -> Actions**.
+2. Select either **Deploy AWS** or **Deploy HCP Vault Cluster**.
+3. Click **Run workflow**.
+4. Set `apply` to `false` to run plan only.
+5. Set `apply` to `true` to run plan and apply.
+
 ## Manual DR Cluster Setup (HCP Console)
 
 After Terraform is complete, create DR clusters manually in the HCP console.
