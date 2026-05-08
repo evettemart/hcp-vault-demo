@@ -3,7 +3,7 @@ terraform {
 
   backend "s3" {
     bucket = "hcp-vault-demo-terraform-state"
-    key    = "terraform/hcp-vault-aws/terraform.tfstate"
+    key    = "terraform/hcp-vault-aws/vault-cluster/terraform.tfstate"
     region = "us-east-1"
   }
 

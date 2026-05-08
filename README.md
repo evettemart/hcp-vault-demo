@@ -3,30 +3,13 @@
 This demo creates the topology shown in your diagram using two Terraform stacks:
 
 - `terraform/aws`
-- `terraform/hcp-vault-aws`
+- `terraform/hcp-vault-aws/vault-cluster`
 
 The implementation is based on the structure and patterns in `vault-hcp-dedicated-migration/terraform/aws` and `vault-hcp-dedicated-migration/terraform/hcp-vault-aws`.
 
-## Topology Diagram
+## Topology
 
-```mermaid
-flowchart TB
-	subgraph PROD[Prod]
-		R1[HCP Vault AWS\nRegion 1 Primary Cluster\neu-west-1]
-		R2[HCP Vault AWS\nRegion 2 Primary Cluster\nus-east-1]
-		R3[HCP Vault AWS\nRegion 3 Primary Cluster\nap-southeast-1]
-
-		DR21[HCP Vault AWS\nDR Secondary for Region 1\nus-east-1]
-		DR32[HCP Vault AWS\nDR Secondary for Region 2\nap-southeast-1]
-		DR13[HCP Vault AWS\nDR Secondary for Region 3\neu-west-1]
-
-		R1 --> R2
-		R2 --> R3
-		DR21 --> R1
-		DR32 --> R2
-		DR13 --> R3
-	end
-```
+![HCP Vault Topology](docs/hcp-vault-AWS.jpg)
 
 ## Region Mapping
 
@@ -45,7 +28,7 @@ flowchart TB
 - Optional acceptance of HCP peering requests
 - Routes from AWS route tables to all HVN CIDRs in this topology
 
-### `terraform/hcp-vault-aws`
+### `terraform/hcp-vault-aws/vault-cluster`
 
 - Three primary HVNs and three primary Vault clusters (regions 1, 2, and 3)
 - Performance replication chain: region 1 -> region 2 -> region 3
@@ -63,37 +46,83 @@ flowchart TB
 - `terraform/aws/versions.tf`
 - `terraform/aws/data.tf`
 - `terraform/aws/terraform.tfvars.example`
-- `terraform/hcp-vault-aws/main.tf`
-- `terraform/hcp-vault-aws/variables.tf`
-- `terraform/hcp-vault-aws/outputs.tf`
-- `terraform/hcp-vault-aws/versions.tf`
-- `terraform/hcp-vault-aws/terraform.tfvars.example`
+- `terraform/hcp-vault-aws/vault-cluster/main.tf`
+- `terraform/hcp-vault-aws/vault-cluster/variables.tf`
+- `terraform/hcp-vault-aws/vault-cluster/outputs.tf`
+- `terraform/hcp-vault-aws/vault-cluster/versions.tf`
+- `terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example`
+
+## Prerequisites
+
+1. Make a copy of `.env.example` and populate your AWS values.
+2. Login into HCP.
+3. Create a project, for example `hcp-vault-aws-prod`.
+4. Get the `hcp-project-id` and populate your `.env` file.
+5. Create a service account with admin access to the project.
+6. Add `HCP_CLIENT_ID` and `HCP_CLIENT_SECRET` to your `.env` file.
+
+Before running Terraform commands, source the environment file:
+
+```bash
+source .env
+```
+
+Create working `terraform.tfvars` files (not examples) in both stack directories:
+
+```bash
+cp terraform/aws/terraform.tfvars.example terraform/aws/terraform.tfvars
+cp terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example terraform/hcp-vault-aws/vault-cluster/terraform.tfvars
+```
 
 ## Deployment Order
 
-1. Deploy AWS network stack.
-2. Deploy HCP Vault stack.
-3. Accept pending peering connections in AWS (if not auto-accepted).
-4. Re-run AWS apply to ensure routes are final.
+1. Create the Terraform state S3 bucket (run once per environment).
+2. Deploy AWS network stack.
+3. Deploy HCP Vault stack.
+4. Accept pending peering connections in AWS (if not auto-accepted).
+5. Re-run AWS apply to ensure routes are final.
 
 ## Commands
 
 ```bash
-# 1) AWS network
-terraform -chdir=terraform/aws init
+# 1) Load environment variables
+source .env
+
+# 2) One-time setup: create Terraform state bucket (run once)
+./scripts/create_s3_bucket.sh <globally-unique-bucket-name> <region>
+
+# 3) Create tfvars copies
 cp terraform/aws/terraform.tfvars.example terraform/aws/terraform.tfvars
+cp terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example terraform/hcp-vault-aws/vault-cluster/terraform.tfvars
+
+# 4) AWS network
+terraform -chdir=terraform/aws init
 terraform -chdir=terraform/aws plan
 terraform -chdir=terraform/aws apply
 
-# 2) HCP Vault on AWS
-terraform -chdir=terraform/hcp-vault-aws init
-cp terraform/hcp-vault-aws/terraform.tfvars.example terraform/hcp-vault-aws/terraform.tfvars
-terraform -chdir=terraform/hcp-vault-aws plan
-terraform -chdir=terraform/hcp-vault-aws apply
+# 5) HCP Vault on AWS
+terraform -chdir=terraform/hcp-vault-aws/vault-cluster init
+terraform -chdir=terraform/hcp-vault-aws/vault-cluster plan
+terraform -chdir=terraform/hcp-vault-aws/vault-cluster apply
 
-# 3) Re-run AWS for final routes after peering acceptance
+# 6) Re-run AWS for final routes after peering acceptance
 terraform -chdir=terraform/aws apply
 ```
+
+## Manual DR Cluster Setup (HCP Console)
+
+After Terraform is complete, create DR clusters manually in the HCP console.
+
+Guidance:
+https://developer.hashicorp.com/vault/tutorials/get-started-hcp-vault-dedicated/manage-clusters#create-cluster-with-cross-region-dr
+
+Select the backup network (HVN) as follows:
+
+| Primary Cluster | Primary Region | Backup Network (HVN) | Backup Region |
+|---|---|---|---|
+| `vault-r1-primary` | eu-west-1 | `vault-r2-dr-for-r1-hvn` | us-east-1 |
+| `vault-r2-primary` | us-east-1 | `vault-r3-dr-for-r2-hvn` | ap-southeast-1 |
+| `vault-r3-primary` | ap-southeast-1 | `vault-r1-dr-for-r3-hvn` | eu-west-1 |
 
 ## Required Environment Variables
 
