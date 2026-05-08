@@ -1,0 +1,36 @@
+project_id = "<hcp-project-id>"
+
+aws_state_bucket = "hcp-vault-demo-terraform-state"
+aws_state_key    = "terraform/aws/terraform.tfstate"
+aws_state_region = "us-east-1"
+
+region_1_primary_hvn_id     = "vault-r1-primary-hvn"
+region_1_primary_hvn_region = "eu-west-1"
+region_1_primary_hvn_cidr   = "172.25.16.0/20"
+region_1_primary_cluster_id = "vault-r1-primary"
+
+region_2_primary_hvn_id     = "vault-r2-primary-hvn"
+region_2_primary_hvn_region = "us-east-1"
+region_2_primary_hvn_cidr   = "172.26.16.0/20"
+region_2_primary_cluster_id = "vault-r2-primary"
+
+region_3_primary_hvn_id     = "vault-r3-primary-hvn"
+region_3_primary_hvn_region = "ap-southeast-1"
+region_3_primary_hvn_cidr   = "172.27.16.0/20"
+region_3_primary_cluster_id = "vault-r3-primary"
+
+region_2_dr_for_region_1_hvn_id     = "vault-r2-dr-for-r1-hvn"
+region_2_dr_for_region_1_hvn_region = "us-east-1"
+region_2_dr_for_region_1_hvn_cidr   = "172.28.16.0/20"
+
+region_3_dr_for_region_2_hvn_id     = "vault-r3-dr-for-r2-hvn"
+region_3_dr_for_region_2_hvn_region = "ap-southeast-1"
+region_3_dr_for_region_2_hvn_cidr   = "172.29.16.0/20"
+
+region_1_dr_for_region_3_hvn_id     = "vault-r1-dr-for-r3-hvn"
+region_1_dr_for_region_3_hvn_region = "eu-west-1"
+region_1_dr_for_region_3_hvn_cidr   = "172.30.16.0/20"
+
+vault_public_endpoint = false
+vault_proxy_endpoint  = "DISABLED"
+vault_ip_allowlist    = []
