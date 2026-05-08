@@ -1,0 +1,23 @@
+aws_region_1                 = "eu-west-1"
+aws_region_2                 = "us-east-1"
+aws_region_3                 = "ap-southeast-1"
+name_prefix                  = "vault-hcp-demo"
+vpc_region_1_cidr_block      = "10.20.0.0/16"
+public_subnet_region_1_cidr  = "10.20.1.0/24"
+private_subnet_region_1_cidr = "10.20.2.0/24"
+vpc_region_2_cidr_block      = "10.21.0.0/16"
+public_subnet_region_2_cidr  = "10.21.1.0/24"
+private_subnet_region_2_cidr = "10.21.2.0/24"
+vpc_region_3_cidr_block      = "10.22.0.0/16"
+public_subnet_region_3_cidr  = "10.22.1.0/24"
+private_subnet_region_3_cidr = "10.22.2.0/24"
+
+enable_hcp_peering_acceptance = false
+enable_hcp_routes             = false
+
+hvn_region_1_primary_cidr         = "172.25.16.0/20"
+hvn_region_2_primary_cidr         = "172.26.16.0/20"
+hvn_region_3_primary_cidr         = "172.27.16.0/20"
+hvn_region_2_dr_for_region_1_cidr = "172.28.16.0/20"
+hvn_region_3_dr_for_region_2_cidr = "172.29.16.0/20"
+hvn_region_1_dr_for_region_3_cidr = "172.30.16.0/20"
