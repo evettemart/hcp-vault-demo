@@ -12,8 +12,12 @@ vpc_region_3_cidr_block      = "10.22.0.0/16"
 public_subnet_region_3_cidr  = "10.22.1.0/24"
 private_subnet_region_3_cidr = "10.22.2.0/24"
 
-enable_hcp_peering_acceptance = false
-enable_hcp_routes             = false
+enable_hcp_tgw_acceptance = false
+enable_hcp_routes         = false
+
+hcp_provider_account_id_region_1 = null
+hcp_provider_account_id_region_2 = null
+hcp_provider_account_id_region_3 = null
 
 hvn_region_1_primary_cidr         = "172.25.16.0/20"
 hvn_region_2_primary_cidr         = "172.26.16.0/20"

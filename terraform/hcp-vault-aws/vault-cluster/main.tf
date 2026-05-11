@@ -97,52 +97,52 @@ data "terraform_remote_state" "aws" {
 locals {
   connectivity = {
     region_1_primary = {
-      hvn_key          = "region_1_primary"
-      peering_id       = var.region_1_primary_to_aws_peering_id
-      route_id         = var.region_1_primary_to_aws_route_id
-      peer_vpc_id      = data.terraform_remote_state.aws.outputs.vpc_region_1_id
-      peer_vpc_region  = data.terraform_remote_state.aws.outputs.aws_region_1
-      destination_cidr = data.terraform_remote_state.aws.outputs.vpc_region_1_cidr_block
+      hvn_key            = "region_1_primary"
+      tgw_attachment_id  = var.region_1_primary_to_aws_tgw_attachment_id
+      transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_1_id
+      resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_1_share_arn
+      route_id           = var.region_1_primary_to_aws_route_id
+      destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_1_cidr_block
     }
     region_2_primary = {
-      hvn_key          = "region_2_primary"
-      peering_id       = var.region_2_primary_to_aws_peering_id
-      route_id         = var.region_2_primary_to_aws_route_id
-      peer_vpc_id      = data.terraform_remote_state.aws.outputs.vpc_region_2_id
-      peer_vpc_region  = data.terraform_remote_state.aws.outputs.aws_region_2
-      destination_cidr = data.terraform_remote_state.aws.outputs.vpc_region_2_cidr_block
+      hvn_key            = "region_2_primary"
+      tgw_attachment_id  = var.region_2_primary_to_aws_tgw_attachment_id
+      transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_2_id
+      resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_2_share_arn
+      route_id           = var.region_2_primary_to_aws_route_id
+      destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_2_cidr_block
     }
     region_3_primary = {
-      hvn_key          = "region_3_primary"
-      peering_id       = var.region_3_primary_to_aws_peering_id
-      route_id         = var.region_3_primary_to_aws_route_id
-      peer_vpc_id      = data.terraform_remote_state.aws.outputs.vpc_region_3_id
-      peer_vpc_region  = data.terraform_remote_state.aws.outputs.aws_region_3
-      destination_cidr = data.terraform_remote_state.aws.outputs.vpc_region_3_cidr_block
+      hvn_key            = "region_3_primary"
+      tgw_attachment_id  = var.region_3_primary_to_aws_tgw_attachment_id
+      transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_3_id
+      resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_3_share_arn
+      route_id           = var.region_3_primary_to_aws_route_id
+      destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_3_cidr_block
     }
     region_2_dr_for_region_1 = {
-      hvn_key          = "region_2_dr_for_region_1"
-      peering_id       = var.region_2_dr_for_region_1_to_aws_peering_id
-      route_id         = var.region_2_dr_for_region_1_to_aws_route_id
-      peer_vpc_id      = data.terraform_remote_state.aws.outputs.vpc_region_2_id
-      peer_vpc_region  = data.terraform_remote_state.aws.outputs.aws_region_2
-      destination_cidr = data.terraform_remote_state.aws.outputs.vpc_region_2_cidr_block
+      hvn_key            = "region_2_dr_for_region_1"
+      tgw_attachment_id  = var.region_2_dr_for_region_1_to_aws_tgw_attachment_id
+      transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_2_id
+      resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_2_share_arn
+      route_id           = var.region_2_dr_for_region_1_to_aws_route_id
+      destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_2_cidr_block
     }
     region_3_dr_for_region_2 = {
-      hvn_key          = "region_3_dr_for_region_2"
-      peering_id       = var.region_3_dr_for_region_2_to_aws_peering_id
-      route_id         = var.region_3_dr_for_region_2_to_aws_route_id
-      peer_vpc_id      = data.terraform_remote_state.aws.outputs.vpc_region_3_id
-      peer_vpc_region  = data.terraform_remote_state.aws.outputs.aws_region_3
-      destination_cidr = data.terraform_remote_state.aws.outputs.vpc_region_3_cidr_block
+      hvn_key            = "region_3_dr_for_region_2"
+      tgw_attachment_id  = var.region_3_dr_for_region_2_to_aws_tgw_attachment_id
+      transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_3_id
+      resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_3_share_arn
+      route_id           = var.region_3_dr_for_region_2_to_aws_route_id
+      destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_3_cidr_block
     }
     region_1_dr_for_region_3 = {
-      hvn_key          = "region_1_dr_for_region_3"
-      peering_id       = var.region_1_dr_for_region_3_to_aws_peering_id
-      route_id         = var.region_1_dr_for_region_3_to_aws_route_id
-      peer_vpc_id      = data.terraform_remote_state.aws.outputs.vpc_region_1_id
-      peer_vpc_region  = data.terraform_remote_state.aws.outputs.aws_region_1
-      destination_cidr = data.terraform_remote_state.aws.outputs.vpc_region_1_cidr_block
+      hvn_key            = "region_1_dr_for_region_3"
+      tgw_attachment_id  = var.region_1_dr_for_region_3_to_aws_tgw_attachment_id
+      transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_1_id
+      resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_1_share_arn
+      route_id           = var.region_1_dr_for_region_3_to_aws_route_id
+      destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_1_cidr_block
     }
   }
 }
@@ -151,12 +151,11 @@ module "hvn_aws_connectivity" {
   source   = "../modules/hvn_aws_connectivity"
   for_each = local.connectivity
 
-  hvn_id           = module.hvn[each.value.hvn_key].hvn_id
-  hvn_link         = module.hvn[each.value.hvn_key].self_link
-  peering_id       = each.value.peering_id
-  peer_vpc_id      = each.value.peer_vpc_id
-  peer_account_id  = data.terraform_remote_state.aws.outputs.aws_account_id
-  peer_vpc_region  = each.value.peer_vpc_region
-  hvn_route_id     = each.value.route_id
-  destination_cidr = each.value.destination_cidr
+  hvn_id                        = module.hvn[each.value.hvn_key].hvn_id
+  hvn_link                      = module.hvn[each.value.hvn_key].self_link
+  transit_gateway_attachment_id = each.value.tgw_attachment_id
+  transit_gateway_id            = each.value.transit_gateway_id
+  resource_share_arn            = each.value.resource_share_arn
+  hvn_route_id                  = each.value.route_id
+  destination_cidr              = each.value.destination_cidr
 }
