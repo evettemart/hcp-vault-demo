@@ -9,7 +9,13 @@ The implementation is based on the structure and patterns in `vault-hcp-dedicate
 
 ## Topology
 
-![HCP Vault Topology](docs/hcp-vault-aws-transit-gateway.png)
+Vault cluster architecture:
+
+![HCP Vault Cluster Architecture](docs/hcp-vault-AWS.jpg)
+
+Transit gateway architecture:
+
+![HCP Vault AWS Transit Gateway](docs/hcp-vault-aws-transit-gateway.png)
 
 ## Region Mapping
 
