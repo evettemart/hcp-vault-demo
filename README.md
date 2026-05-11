@@ -15,7 +15,7 @@ Vault cluster architecture:
 
 Transit gateway architecture:
 
-![HCP Vault AWS Transit Gateway](docs/hcp-vault-aws-transit-gateway.png)
+![HCP Vault AWS Transit Gateway](docs/hcp-vault-aws-transit-gateway.jpeg)
 
 ## Region Mapping
 
