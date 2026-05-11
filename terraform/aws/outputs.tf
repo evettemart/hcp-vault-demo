@@ -77,3 +77,33 @@ output "aws_account_id" {
   description = "AWS account ID"
   value       = data.aws_caller_identity.current.account_id
 }
+
+output "tgw_region_1_id" {
+  description = "Region 1 Transit Gateway ID"
+  value       = module.tgw_region_1.transit_gateway_id
+}
+
+output "tgw_region_2_id" {
+  description = "Region 2 Transit Gateway ID"
+  value       = module.tgw_region_2.transit_gateway_id
+}
+
+output "tgw_region_3_id" {
+  description = "Region 3 Transit Gateway ID"
+  value       = module.tgw_region_3.transit_gateway_id
+}
+
+output "tgw_region_1_share_arn" {
+  description = "Region 1 RAM share ARN for TGW"
+  value       = module.tgw_region_1.resource_share_arn
+}
+
+output "tgw_region_2_share_arn" {
+  description = "Region 2 RAM share ARN for TGW"
+  value       = module.tgw_region_2.resource_share_arn
+}
+
+output "tgw_region_3_share_arn" {
+  description = "Region 3 RAM share ARN for TGW"
+  value       = module.tgw_region_3.resource_share_arn
+}

@@ -8,23 +8,18 @@ variable "hvn_link" {
   type        = string
 }
 
-variable "peering_id" {
-  description = "HCP peering ID"
+variable "transit_gateway_attachment_id" {
+  description = "HCP transit gateway attachment ID"
   type        = string
 }
 
-variable "peer_vpc_id" {
-  description = "AWS VPC ID to peer with"
+variable "transit_gateway_id" {
+  description = "AWS Transit Gateway ID"
   type        = string
 }
 
-variable "peer_account_id" {
-  description = "AWS account ID owning peer VPC"
-  type        = string
-}
-
-variable "peer_vpc_region" {
-  description = "AWS region of peer VPC"
+variable "resource_share_arn" {
+  description = "AWS RAM resource share ARN for the transit gateway"
   type        = string
 }
 

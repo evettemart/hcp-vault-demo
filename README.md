@@ -11,6 +11,53 @@ The implementation is based on the structure and patterns in `vault-hcp-dedicate
 
 ![HCP Vault Topology](docs/hcp-vault-AWS.jpg)
 
+### AWS + Transit Gateway + HCP Vault (Logical)
+
+```mermaid
+flowchart LR
+	subgraph R1[eu-west-1]
+		VPC1[AWS VPC r1\n10.20.0.0/16]
+		TGW1[Transit Gateway r1]
+		HVN1[HCP HVN r1 primary\n172.25.16.0/20]
+		HVN1DR[HCP HVN r1 DR-for-r3\n172.30.16.0/20]
+		VC1[Vault cluster r1 primary]
+	end
+
+	subgraph R2[us-east-1]
+		VPC2[AWS VPC r2\n10.21.0.0/16]
+		TGW2[Transit Gateway r2]
+		HVN2[HCP HVN r2 primary\n172.26.16.0/20]
+		HVN2DR[HCP HVN r2 DR-for-r1\n172.28.16.0/20]
+		VC2[Vault cluster r2 primary]
+	end
+
+	subgraph R3[ap-southeast-1]
+		VPC3[AWS VPC r3\n10.22.0.0/16]
+		TGW3[Transit Gateway r3]
+		HVN3[HCP HVN r3 primary\n172.27.16.0/20]
+		HVN3DR[HCP HVN r3 DR-for-r2\n172.29.16.0/20]
+		VC3[Vault cluster r3 primary]
+	end
+
+	VPC1 <-- VPC attachment --> TGW1
+	VPC2 <-- VPC attachment --> TGW2
+	VPC3 <-- VPC attachment --> TGW3
+
+	TGW1 <-- HCP TGW attachment --> HVN1
+	TGW1 <-- HCP TGW attachment --> HVN1DR
+	TGW2 <-- HCP TGW attachment --> HVN2
+	TGW2 <-- HCP TGW attachment --> HVN2DR
+	TGW3 <-- HCP TGW attachment --> HVN3
+	TGW3 <-- HCP TGW attachment --> HVN3DR
+
+	HVN1 --> VC1
+	HVN2 --> VC2
+	HVN3 --> VC3
+
+	VC1 -. performance replication .-> VC2
+	VC2 -. performance replication .-> VC3
+```
+
 ## Region Mapping
 
 | System | Region Group | Platform Region | HCP Region |
@@ -25,8 +72,11 @@ The implementation is based on the structure and patterns in `vault-hcp-dedicate
 ### `terraform/aws`
 
 - AWS VPC, subnets, route tables, and internet gateway
-- Optional acceptance of HCP peering requests
-- Routes from AWS route tables to all HVN CIDRs in this topology
+- One AWS Transit Gateway per region
+- VPC attachments for each regional VPC
+- RAM shares for each regional Transit Gateway
+- Optional acceptance of HCP Transit Gateway attachment requests
+- Routes from AWS route tables to all HVN CIDRs via Transit Gateway
 
 ### `terraform/hcp-vault-aws/vault-cluster`
 
@@ -35,8 +85,8 @@ The implementation is based on the structure and patterns in `vault-hcp-dedicate
 - DR-secondary HVN in region 2 for region 1
 - DR-secondary HVN in region 3 for region 2
 - DR-secondary HVN in region 1 for region 3
-- HCP-to-AWS peering requests for all HVNs
-- HVN routes from each HVN back to its matching AWS regional VPC
+- HCP Transit Gateway attachments for all HVNs
+- HVN routes from each HVN back to its matching AWS regional VPC via Transit Gateway
 
 ## Folder Layout
 
@@ -77,10 +127,13 @@ cp terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example terraform/hcp-
 ## Deployment Order
 
 1. Create the Terraform state S3 bucket (run once per environment).
-2. Deploy AWS network stack.
-3. Deploy HCP Vault stack.
-4. Accept pending peering connections in AWS (if not auto-accepted).
-5. Re-run AWS apply to ensure routes are final.
+2. Deploy AWS network + Transit Gateways + RAM shares.
+3. Set HCP provider AWS account IDs in `terraform/aws/terraform.tfvars`.
+4. Re-apply AWS so RAM principal associations are created.
+5. Deploy HCP Vault stack (creates HCP Transit Gateway attachments and HVN routes).
+6. Accept pending Transit Gateway attachments in AWS (if not auto-accepted).
+7. Enable `enable_hcp_tgw_acceptance = true` in `terraform/aws/terraform.tfvars` and apply AWS.
+8. Re-run plans for both stacks and confirm no changes.
 
 ## Commands
 
@@ -100,14 +153,41 @@ terraform -chdir=terraform/aws init
 terraform -chdir=terraform/aws plan
 terraform -chdir=terraform/aws apply
 
-# 5) HCP Vault on AWS
+# 5) Set HCP provider account IDs in terraform/aws/terraform.tfvars
+# Example (same account ID may be used across all regions):
+# hcp_provider_account_id_region_1 = "<hcp-provider-account-id>"
+# hcp_provider_account_id_region_2 = "<hcp-provider-account-id>"
+# hcp_provider_account_id_region_3 = "<hcp-provider-account-id>"
+
+# 6) Re-apply AWS to create RAM principal associations
+terraform -chdir=terraform/aws apply
+
+# 7) HCP Vault on AWS
 terraform -chdir=terraform/hcp-vault-aws/vault-cluster init
 terraform -chdir=terraform/hcp-vault-aws/vault-cluster plan
 terraform -chdir=terraform/hcp-vault-aws/vault-cluster apply
 
-# 6) Re-run AWS for final routes after peering acceptance
+# 8) Accept pending Transit Gateway attachments in AWS Console if needed
+# VPC/EC2 -> Transit Gateways -> Transit Gateway Attachments -> Accept
+
+# 9) Enable acceptance in terraform/aws/terraform.tfvars and apply:
+# enable_hcp_tgw_acceptance = true
 terraform -chdir=terraform/aws apply
+
+# 10) Final convergence check
+terraform -chdir=terraform/aws plan
+terraform -chdir=terraform/hcp-vault-aws/vault-cluster plan
 ```
+
+## Transit Gateway Notes
+
+- Transit Gateway is regional; this demo creates one TGW per region (`eu-west-1`, `us-east-1`, `ap-southeast-1`).
+- With this topology, each region typically shows 3 TGW attachments:
+	- 1 AWS VPC attachment
+	- 2 HCP-managed attachments (primary + DR HVN in that region)
+- If HCP apply returns `resource share doesn't exist in the cloud provider`, ensure
+	`hcp_provider_account_id_region_1/2/3` are set in `terraform/aws/terraform.tfvars`
+	and AWS stack has been re-applied to create RAM principal associations.
 
 ## GitHub Actions (On-Demand)
 

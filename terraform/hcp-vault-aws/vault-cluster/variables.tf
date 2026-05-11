@@ -192,40 +192,40 @@ variable "vault_ip_allowlist" {
   default = []
 }
 
-variable "region_1_primary_to_aws_peering_id" {
-  description = "Peering ID for Region 1 primary HVN"
+variable "region_1_primary_to_aws_tgw_attachment_id" {
+  description = "Transit gateway attachment ID for Region 1 primary HVN"
   type        = string
-  default     = "r1-primary-to-aws"
+  default     = "r1-primary-to-aws-tgw"
 }
 
-variable "region_2_primary_to_aws_peering_id" {
-  description = "Peering ID for Region 2 primary HVN"
+variable "region_2_primary_to_aws_tgw_attachment_id" {
+  description = "Transit gateway attachment ID for Region 2 primary HVN"
   type        = string
-  default     = "r2-primary-to-aws"
+  default     = "r2-primary-to-aws-tgw"
 }
 
-variable "region_3_primary_to_aws_peering_id" {
-  description = "Peering ID for Region 3 primary HVN"
+variable "region_3_primary_to_aws_tgw_attachment_id" {
+  description = "Transit gateway attachment ID for Region 3 primary HVN"
   type        = string
-  default     = "r3-primary-to-aws"
+  default     = "r3-primary-to-aws-tgw"
 }
 
-variable "region_2_dr_for_region_1_to_aws_peering_id" {
-  description = "Peering ID for Region 2 DR HVN serving Region 1"
+variable "region_2_dr_for_region_1_to_aws_tgw_attachment_id" {
+  description = "Transit gateway attachment ID for Region 2 DR HVN serving Region 1"
   type        = string
-  default     = "r2-dr-for-r1-to-aws"
+  default     = "r2-dr-for-r1-to-aws-tgw"
 }
 
-variable "region_3_dr_for_region_2_to_aws_peering_id" {
-  description = "Peering ID for Region 3 DR HVN serving Region 2"
+variable "region_3_dr_for_region_2_to_aws_tgw_attachment_id" {
+  description = "Transit gateway attachment ID for Region 3 DR HVN serving Region 2"
   type        = string
-  default     = "r3-dr-for-r2-to-aws"
+  default     = "r3-dr-for-r2-to-aws-tgw"
 }
 
-variable "region_1_dr_for_region_3_to_aws_peering_id" {
-  description = "Peering ID for Region 1 DR HVN serving Region 3"
+variable "region_1_dr_for_region_3_to_aws_tgw_attachment_id" {
+  description = "Transit gateway attachment ID for Region 1 DR HVN serving Region 3"
   type        = string
-  default     = "r1-dr-for-r3-to-aws"
+  default     = "r1-dr-for-r3-to-aws-tgw"
 }
 
 variable "region_1_primary_to_aws_route_id" {

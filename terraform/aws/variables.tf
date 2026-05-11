@@ -76,14 +76,14 @@ variable "private_subnet_region_3_cidr" {
   default     = "10.22.2.0/24"
 }
 
-variable "enable_hcp_peering_acceptance" {
-  description = "Enable accepting HCP peering requests in AWS"
+variable "enable_hcp_tgw_acceptance" {
+  description = "Enable accepting HCP transit gateway attachments in AWS"
   type        = bool
   default     = false
 }
 
 variable "enable_hcp_routes" {
-  description = "Enable creating routes from AWS route tables to all HVN CIDRs"
+  description = "Enable creating routes from AWS route tables to all HVN CIDRs via transit gateways"
   type        = bool
   default     = false
 }
@@ -122,6 +122,24 @@ variable "hvn_region_1_dr_for_region_3_cidr" {
   description = "CIDR for DR secondary HVN in Region 1 serving Region 3"
   type        = string
   default     = "172.30.16.0/20"
+}
+
+variable "hcp_provider_account_id_region_1" {
+  description = "Optional HCP provider AWS account ID used for RAM principal association in Region 1"
+  type        = string
+  default     = null
+}
+
+variable "hcp_provider_account_id_region_2" {
+  description = "Optional HCP provider AWS account ID used for RAM principal association in Region 2"
+  type        = string
+  default     = null
+}
+
+variable "hcp_provider_account_id_region_3" {
+  description = "Optional HCP provider AWS account ID used for RAM principal association in Region 3"
+  type        = string
+  default     = null
 }
 
 variable "tags" {

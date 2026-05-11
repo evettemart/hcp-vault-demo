@@ -18,8 +18,8 @@ variable "destination_cidr_block" {
   type        = string
 }
 
-variable "peering_connection_id" {
-  description = "VPC peering connection ID"
+variable "transit_gateway_id" {
+  description = "Transit Gateway ID"
   type        = string
   default     = null
 }
