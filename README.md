@@ -9,13 +9,17 @@ The implementation is based on the structure and patterns in `vault-hcp-dedicate
 
 ## Topology
 
-Vault cluster architecture:
+Vault cluster architecture (Prod AWS):
 
 ![HCP Vault Cluster Architecture](docs/hcp-vault-AWS.jpg)
 
 Transit gateway architecture:
 
 ![HCP Vault AWS Transit Gateway](docs/hcp-vault-aws-transit-gateway.jpeg)
+
+Non-prod architecture:
+
+![HCP Vault AWS Non-Prod Architecture](docs/hcp-vault-AWS-non-prod.png)
 
 ### AWS + Transit Gateway + HCP Vault (Logical)
 
@@ -86,9 +90,9 @@ flowchart LR
 
 ### `terraform/hcp-vault-aws/vault-cluster`
 
-- Scenario-based deployment via `topology_scenario`
-	- `full`: three primary HVNs and three Vault clusters (regions 1, 2, and 3)
-	- `dr_pair_r1_r2`: two HVNs (region 1 primary + region 2 DR HVN) and one Vault cluster (region 1)
+- Scenario-based deployment via `topology_scenario` with two architecture profiles:
+- `full` (prod AWS): configured across regions 1, 2, and 3 with 3 performance-replication Vault clusters and 3 DR clusters (see manual DR section below).
+- `dr_pair_r1_r2` (non-prod AWS): configured across regions 1 and 2 with 1 Vault cluster (region 1) and 1 DR path/HVN (region 2).
 - HCP Transit Gateway attachments for active HVNs in the selected scenario
 - HVN routes from active HVNs back to matching AWS regional VPCs via Transit Gateway
 
@@ -146,6 +150,7 @@ topology_scenario = "dr_pair_r1_r2"
 # prod.tfvars
 project_id = "<hcp-prod-project-id>"
 topology_scenario = "full"
+# Prod uses regions 1, 2, and 3.
 ```
 
 ## Deployment Order
@@ -273,7 +278,8 @@ How to run:
 
 ## Manual DR Cluster Setup (HCP Console)
 
-After Terraform is complete, create DR clusters manually in the HCP console.
+For `prod` (`topology_scenario = "full"`), after Terraform is complete, create DR clusters manually in the HCP console.
+This produces the three DR clusters expected for the prod architecture.
 
 Guidance:
 https://developer.hashicorp.com/vault/tutorials/get-started-hcp-vault-dedicated/manage-clusters#create-cluster-with-cross-region-dr
