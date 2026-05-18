@@ -4,4 +4,8 @@ resource "hcp_hvn" "this" {
   region         = var.region
   cidr_block     = var.cidr_block
   project_id     = var.project_id
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }

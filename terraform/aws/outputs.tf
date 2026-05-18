@@ -55,22 +55,22 @@ output "private_subnet_region_2_id" {
 
 output "vpc_region_3_id" {
   description = "Region 3 VPC ID"
-  value       = module.region_3_network.vpc_id
+  value       = try(module.region_3_network[0].vpc_id, null)
 }
 
 output "vpc_region_3_cidr_block" {
   description = "Region 3 VPC CIDR"
-  value       = module.region_3_network.vpc_cidr_block
+  value       = try(module.region_3_network[0].vpc_cidr_block, null)
 }
 
 output "public_subnet_region_3_id" {
   description = "Region 3 public subnet ID"
-  value       = module.region_3_network.public_subnet_id
+  value       = try(module.region_3_network[0].public_subnet_id, null)
 }
 
 output "private_subnet_region_3_id" {
   description = "Region 3 private subnet ID"
-  value       = module.region_3_network.private_subnet_id
+  value       = try(module.region_3_network[0].private_subnet_id, null)
 }
 
 output "aws_account_id" {
@@ -90,7 +90,7 @@ output "tgw_region_2_id" {
 
 output "tgw_region_3_id" {
   description = "Region 3 Transit Gateway ID"
-  value       = module.tgw_region_3.transit_gateway_id
+  value       = try(module.tgw_region_3[0].transit_gateway_id, null)
 }
 
 output "tgw_region_1_share_arn" {
@@ -105,5 +105,5 @@ output "tgw_region_2_share_arn" {
 
 output "tgw_region_3_share_arn" {
   description = "Region 3 RAM share ARN for TGW"
-  value       = module.tgw_region_3.resource_share_arn
+  value       = try(module.tgw_region_3[0].resource_share_arn, null)
 }

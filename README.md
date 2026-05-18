@@ -9,13 +9,17 @@ The implementation is based on the structure and patterns in `vault-hcp-dedicate
 
 ## Topology
 
-Vault cluster architecture:
+Vault cluster architecture (Prod AWS):
 
 ![HCP Vault Cluster Architecture](docs/hcp-vault-AWS.jpg)
 
 Transit gateway architecture:
 
 ![HCP Vault AWS Transit Gateway](docs/hcp-vault-aws-transit-gateway.jpeg)
+
+Non-prod architecture:
+
+![HCP Vault AWS Non-Prod Architecture](docs/hcp-vault-AWS-non-prod.png)
 
 ### AWS + Transit Gateway + HCP Vault (Logical)
 
@@ -86,13 +90,11 @@ flowchart LR
 
 ### `terraform/hcp-vault-aws/vault-cluster`
 
-- Three primary HVNs and three primary Vault clusters (regions 1, 2, and 3)
-- Performance replication chain: region 1 -> region 2 -> region 3
-- DR-secondary HVN in region 2 for region 1
-- DR-secondary HVN in region 3 for region 2
-- DR-secondary HVN in region 1 for region 3
-- HCP Transit Gateway attachments for all HVNs
-- HVN routes from each HVN back to its matching AWS regional VPC via Transit Gateway
+- Scenario-based deployment via `topology_scenario` with two architecture profiles:
+- `full` (prod AWS): configured across regions 1, 2, and 3 with 3 performance-replication Vault clusters and 3 DR clusters (see manual DR section below).
+- `dr_pair_r1_r2` (non-prod AWS): configured across regions 1 and 2 with 1 Vault cluster (region 1) and 1 DR path/HVN (region 2).
+- HCP Transit Gateway attachments for active HVNs in the selected scenario
+- HVN routes from active HVNs back to matching AWS regional VPCs via Transit Gateway
 
 ## Folder Layout
 
@@ -123,22 +125,43 @@ Before running Terraform commands, source the environment file:
 source .env
 ```
 
-Create working `terraform.tfvars` files (not examples) in both stack directories:
+Create workspace-specific tfvars files in both stack directories:
 
 ```bash
-cp terraform/aws/terraform.tfvars.example terraform/aws/terraform.tfvars
-cp terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example terraform/hcp-vault-aws/vault-cluster/terraform.tfvars
+cp terraform/aws/terraform.tfvars.example terraform/aws/non-prod.tfvars
+cp terraform/aws/terraform.tfvars.example terraform/aws/prod.tfvars
+
+cp terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example terraform/hcp-vault-aws/vault-cluster/non-prod.tfvars
+cp terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example terraform/hcp-vault-aws/vault-cluster/prod.tfvars
+```
+
+Set different HCP project IDs per environment:
+
+- `terraform/hcp-vault-aws/vault-cluster/non-prod.tfvars` -> non-prod HCP project ID
+- `terraform/hcp-vault-aws/vault-cluster/prod.tfvars` -> prod HCP project ID
+
+Example:
+
+```hcl
+# non-prod.tfvars
+project_id = "<hcp-non-prod-project-id>"
+topology_scenario = "dr_pair_r1_r2"
+
+# prod.tfvars
+project_id = "<hcp-prod-project-id>"
+topology_scenario = "full"
+# Prod uses regions 1, 2, and 3.
 ```
 
 ## Deployment Order
 
 1. Create the Terraform state S3 bucket (run once per environment).
-2. Deploy AWS network + Transit Gateways + RAM shares.
-3. Set HCP provider AWS account IDs in `terraform/aws/terraform.tfvars`.
-4. Re-apply AWS so RAM principal associations are created.
-5. Deploy HCP Vault stack (creates HCP Transit Gateway attachments and HVN routes).
+2. Create/select Terraform workspace (`non-prod` or `prod`) in both stacks.
+3. Deploy AWS network + Transit Gateways + RAM shares using workspace tfvars.
+4. Set HCP provider AWS account IDs in workspace tfvars and re-apply AWS.
+5. Deploy HCP Vault stack using the matching workspace tfvars (with matching HCP project ID).
 6. Accept pending Transit Gateway attachments in AWS (if not auto-accepted).
-7. Enable `enable_hcp_tgw_acceptance = true` in `terraform/aws/terraform.tfvars` and apply AWS.
+7. Enable `enable_hcp_tgw_acceptance = true` in AWS workspace tfvars and apply AWS.
 8. Re-run plans for both stacks and confirm no changes.
 
 ## Commands
@@ -150,49 +173,71 @@ source .env
 # 2) One-time setup: create Terraform state bucket (run once)
 ./scripts/create_s3_bucket.sh <globally-unique-bucket-name> <region>
 
-# 3) Create tfvars copies
-cp terraform/aws/terraform.tfvars.example terraform/aws/terraform.tfvars
-cp terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example terraform/hcp-vault-aws/vault-cluster/terraform.tfvars
+# 3) Create workspace tfvars
+cp terraform/aws/terraform.tfvars.example terraform/aws/non-prod.tfvars
+cp terraform/aws/terraform.tfvars.example terraform/aws/prod.tfvars
+cp terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example terraform/hcp-vault-aws/vault-cluster/non-prod.tfvars
+cp terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example terraform/hcp-vault-aws/vault-cluster/prod.tfvars
 
-# 4) AWS network
-terraform -chdir=terraform/aws init
-terraform -chdir=terraform/aws plan
-terraform -chdir=terraform/aws apply
+# 4) Choose environment
+export TF_ENV=non-prod   # or prod
 
-# 5) Set HCP provider account IDs in terraform/aws/terraform.tfvars
+# 5) AWS stack: init + workspace
+terraform -chdir=terraform/aws init -reconfigure
+terraform -chdir=terraform/aws workspace new "$TF_ENV" || terraform -chdir=terraform/aws workspace select "$TF_ENV"
+terraform -chdir=terraform/aws workspace show
+
+# 6) AWS network apply with workspace tfvars
+terraform -chdir=terraform/aws plan  -var-file="$TF_ENV.tfvars"
+terraform -chdir=terraform/aws apply -var-file="$TF_ENV.tfvars"
+
+# 7) Set HCP provider account IDs in terraform/aws/$TF_ENV.tfvars
 # Example (same account ID may be used across all regions):
 # hcp_provider_account_id_region_1 = "<hcp-provider-account-id>"
 # hcp_provider_account_id_region_2 = "<hcp-provider-account-id>"
 # hcp_provider_account_id_region_3 = "<hcp-provider-account-id>"
 
-# 6) Re-apply AWS to create RAM principal associations
-terraform -chdir=terraform/aws apply
+# 8) Re-apply AWS to create RAM principal associations
+terraform -chdir=terraform/aws apply -var-file="$TF_ENV.tfvars"
 
-# 7) HCP Vault on AWS
-terraform -chdir=terraform/hcp-vault-aws/vault-cluster init
-terraform -chdir=terraform/hcp-vault-aws/vault-cluster plan
-terraform -chdir=terraform/hcp-vault-aws/vault-cluster apply
+# 9) HCP stack: init + same workspace
+terraform -chdir=terraform/hcp-vault-aws/vault-cluster init -reconfigure
+terraform -chdir=terraform/hcp-vault-aws/vault-cluster workspace new "$TF_ENV" || terraform -chdir=terraform/hcp-vault-aws/vault-cluster workspace select "$TF_ENV"
+terraform -chdir=terraform/hcp-vault-aws/vault-cluster workspace show
 
-# 8) Accept pending Transit Gateway attachments in AWS Console if needed
+# 10) HCP Vault on AWS using matching workspace tfvars
+terraform -chdir=terraform/hcp-vault-aws/vault-cluster plan  -var-file="$TF_ENV.tfvars"
+terraform -chdir=terraform/hcp-vault-aws/vault-cluster apply -var-file="$TF_ENV.tfvars"
+
+# 11) Accept pending Transit Gateway attachments in AWS Console if needed
 # VPC/EC2 -> Transit Gateways -> Transit Gateway Attachments -> Accept
 
-# 9) Enable acceptance in terraform/aws/terraform.tfvars and apply:
+# 12) Enable acceptance in terraform/aws/$TF_ENV.tfvars and apply:
 # enable_hcp_tgw_acceptance = true
-terraform -chdir=terraform/aws apply
+terraform -chdir=terraform/aws apply -var-file="$TF_ENV.tfvars"
 
-# 10) Final convergence check
-terraform -chdir=terraform/aws plan
-terraform -chdir=terraform/hcp-vault-aws/vault-cluster plan
+# 13) Final convergence check (same workspace)
+terraform -chdir=terraform/aws plan -var-file="$TF_ENV.tfvars"
+terraform -chdir=terraform/hcp-vault-aws/vault-cluster plan -var-file="$TF_ENV.tfvars"
 ```
+
+Important workspace notes:
+
+- Do not use the `default` workspace for environment deployments.
+- Use the same workspace name in both stacks (`non-prod` with `non-prod`, `prod` with `prod`).
+- Backends are configured with workspace-isolated S3 paths via `workspace_key_prefix`.
 
 ## Transit Gateway Notes
 
 - Transit Gateway is regional; this demo creates one TGW per region (`eu-west-1`, `us-east-1`, `ap-southeast-1`).
-- With this topology, each region typically shows 3 TGW attachments:
+- In `full` topology, each region typically shows 3 TGW attachments:
 	- 1 AWS VPC attachment
 	- 2 HCP-managed attachments (primary + DR HVN in that region)
+- In `dr_pair_r1_r2` non-prod topology, regions 1 and 2 typically show 2 TGW attachments each:
+	- 1 AWS VPC attachment
+	- 1 HCP-managed attachment
 - If HCP apply returns `resource share doesn't exist in the cloud provider`, ensure
-	`hcp_provider_account_id_region_1/2/3` are set in `terraform/aws/terraform.tfvars`
+	`hcp_provider_account_id_region_1/2/3` are set in `terraform/aws/<workspace>.tfvars`
 	and AWS stack has been re-applied to create RAM principal associations.
 
 ## GitHub Actions (On-Demand)
@@ -211,19 +256,30 @@ Required repository secrets:
 - `AWS_REGION`
 - `HCP_CLIENT_ID`
 - `HCP_CLIENT_SECRET`
-- `HCP_PROJECT_ID`
+
+Workflow behavior:
+
+- Both workflows require a `workspace` input (`non-prod` by default, or `prod`).
+- Both workflows select the provided workspace and run with `-var-file=<workspace>.tfvars`.
+
+Make sure these files exist and are populated for the workspace you select:
+
+- `terraform/aws/non-prod.tfvars` and `terraform/hcp-vault-aws/vault-cluster/non-prod.tfvars`
+- `terraform/aws/prod.tfvars` and `terraform/hcp-vault-aws/vault-cluster/prod.tfvars`
 
 How to run:
 
 1. Open **GitHub -> Actions**.
 2. Select either **Deploy AWS** or **Deploy HCP Vault Cluster**.
 3. Click **Run workflow**.
-4. Set `apply` to `false` to run plan only.
-5. Set `apply` to `true` to run plan and apply.
+4. Choose `workspace` (`non-prod` or `prod`).
+5. Set `apply` to `false` to run plan only.
+6. Set `apply` to `true` to run plan and apply.
 
 ## Manual DR Cluster Setup (HCP Console)
 
-After Terraform is complete, create DR clusters manually in the HCP console.
+For `prod` (`topology_scenario = "full"`), after Terraform is complete, create DR clusters manually in the HCP console.
+This produces the three DR clusters expected for the prod architecture.
 
 Guidance:
 https://developer.hashicorp.com/vault/tutorials/get-started-hcp-vault-dedicated/manage-clusters#create-cluster-with-cross-region-dr

@@ -7,7 +7,12 @@ module "region_1_network" {
   vpc_cidr_block      = var.vpc_region_1_cidr_block
   public_subnet_cidr  = var.public_subnet_region_1_cidr
   private_subnet_cidr = var.private_subnet_region_1_cidr
-  tags                = var.tags
+  tags                = local.tags
+}
+
+locals {
+  full_topology = var.topology_scenario == "full"
+  tags          = merge(var.tags, { Environment = var.environment })
 }
 
 module "region_2_network" {
@@ -23,10 +28,11 @@ module "region_2_network" {
   vpc_cidr_block      = var.vpc_region_2_cidr_block
   public_subnet_cidr  = var.public_subnet_region_2_cidr
   private_subnet_cidr = var.private_subnet_region_2_cidr
-  tags                = var.tags
+  tags                = local.tags
 }
 
 module "region_3_network" {
+  count  = local.full_topology ? 1 : 0
   source = "./modules/regional_network"
 
   providers = {
@@ -39,7 +45,7 @@ module "region_3_network" {
   vpc_cidr_block      = var.vpc_region_3_cidr_block
   public_subnet_cidr  = var.public_subnet_region_3_cidr
   private_subnet_cidr = var.private_subnet_region_3_cidr
-  tags                = var.tags
+  tags                = local.tags
 }
 
 module "tgw_region_1" {
@@ -52,7 +58,7 @@ module "tgw_region_1" {
   vpc_id                  = module.region_1_network.vpc_id
   subnet_ids              = [module.region_1_network.private_subnet_id]
   hcp_provider_account_id = var.hcp_provider_account_id_region_1
-  tags                    = var.tags
+  tags                    = local.tags
 }
 
 module "tgw_region_2" {
@@ -69,10 +75,11 @@ module "tgw_region_2" {
   vpc_id                  = module.region_2_network.vpc_id
   subnet_ids              = [module.region_2_network.private_subnet_id]
   hcp_provider_account_id = var.hcp_provider_account_id_region_2
-  tags                    = var.tags
+  tags                    = local.tags
 }
 
 module "tgw_region_3" {
+  count  = local.full_topology ? 1 : 0
   source = "./modules/tgw_regional_connectivity"
 
   providers = {
@@ -83,20 +90,22 @@ module "tgw_region_3" {
   region_short            = "r3"
   region_group            = "region-3"
   region_label            = "Region 3"
-  vpc_id                  = module.region_3_network.vpc_id
-  subnet_ids              = [module.region_3_network.private_subnet_id]
+  vpc_id                  = module.region_3_network[0].vpc_id
+  subnet_ids              = [module.region_3_network[0].private_subnet_id]
   hcp_provider_account_id = var.hcp_provider_account_id_region_3
-  tags                    = var.tags
+  tags                    = local.tags
 }
 
 data "terraform_remote_state" "hcp_vault_aws" {
-  count   = var.enable_hcp_tgw_acceptance ? 1 : 0
-  backend = "s3"
+  count     = var.enable_hcp_tgw_acceptance ? 1 : 0
+  backend   = "s3"
+  workspace = terraform.workspace
 
   config = {
-    bucket = "hcp-vault-demo-terraform-state"
-    key    = "terraform/hcp-vault-aws/vault-cluster/terraform.tfstate"
-    region = "us-east-1"
+    bucket               = "hcp-vault-demo-terraform-state"
+    key                  = "terraform/hcp-vault-aws/vault-cluster/terraform.tfstate"
+    region               = "us-east-1"
+    workspace_key_prefix = "terraform/workspaces"
   }
 }
 
@@ -164,6 +173,7 @@ module "routes_region_1_primary" {
 }
 
 module "routes_region_2_primary" {
+  count  = local.full_topology ? 1 : 0
   source = "./modules/hvn_routes"
 
   providers = {
@@ -178,6 +188,7 @@ module "routes_region_2_primary" {
 }
 
 module "routes_region_3_primary" {
+  count  = local.full_topology ? 1 : 0
   source = "./modules/hvn_routes"
 
   providers = {
@@ -185,10 +196,10 @@ module "routes_region_3_primary" {
   }
 
   enabled                = var.enable_hcp_routes
-  public_route_table_id  = module.region_3_network.public_route_table_id
-  private_route_table_id = module.region_3_network.private_route_table_id
+  public_route_table_id  = module.region_3_network[0].public_route_table_id
+  private_route_table_id = module.region_3_network[0].private_route_table_id
   destination_cidr_block = var.hvn_region_3_primary_cidr
-  transit_gateway_id     = module.tgw_region_3.transit_gateway_id
+  transit_gateway_id     = module.tgw_region_3[0].transit_gateway_id
 }
 
 module "routes_region_2_dr_for_region_1" {
@@ -206,6 +217,7 @@ module "routes_region_2_dr_for_region_1" {
 }
 
 module "routes_region_3_dr_for_region_2" {
+  count  = local.full_topology ? 1 : 0
   source = "./modules/hvn_routes"
 
   providers = {
@@ -213,13 +225,14 @@ module "routes_region_3_dr_for_region_2" {
   }
 
   enabled                = var.enable_hcp_routes
-  public_route_table_id  = module.region_3_network.public_route_table_id
-  private_route_table_id = module.region_3_network.private_route_table_id
+  public_route_table_id  = module.region_3_network[0].public_route_table_id
+  private_route_table_id = module.region_3_network[0].private_route_table_id
   destination_cidr_block = var.hvn_region_3_dr_for_region_2_cidr
-  transit_gateway_id     = module.tgw_region_3.transit_gateway_id
+  transit_gateway_id     = module.tgw_region_3[0].transit_gateway_id
 }
 
 module "routes_region_1_dr_for_region_3" {
+  count  = local.full_topology ? 1 : 0
   source = "./modules/hvn_routes"
 
   enabled                = var.enable_hcp_routes
