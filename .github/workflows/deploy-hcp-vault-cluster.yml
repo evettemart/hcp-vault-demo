@@ -3,6 +3,14 @@ name: Deploy HCP Vault Cluster
 on:
   workflow_dispatch:
     inputs:
+      workspace:
+        description: "Terraform workspace to deploy"
+        required: true
+        default: non-prod
+        type: choice
+        options:
+          - prod
+          - non-prod
       apply:
         description: "Apply Terraform changes"
         required: true
@@ -25,7 +33,6 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       HCP_CLIENT_ID: ${{ secrets.HCP_CLIENT_ID }}
       HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
-      TF_VAR_project_id: ${{ secrets.HCP_PROJECT_ID }}
       TF_IN_AUTOMATION: "true"
 
     steps:
@@ -38,8 +45,11 @@ jobs:
       - name: Terraform Init
         run: terraform init -input=false
 
+      - name: Select Workspace
+        run: terraform workspace select "${{ inputs.workspace }}" || terraform workspace new "${{ inputs.workspace }}"
+
       - name: Terraform Plan
-        run: terraform plan -input=false -out=tfplan
+        run: terraform plan -input=false -var-file="${{ inputs.workspace }}.tfvars" -out=tfplan
 
       - name: Terraform Apply
         if: ${{ inputs.apply == true }}

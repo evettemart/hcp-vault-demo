@@ -22,6 +22,23 @@ variable "name_prefix" {
   default     = "vault-hcp-demo"
 }
 
+variable "environment" {
+  description = "Deployment environment name used for tagging"
+  type        = string
+  default     = "prod"
+}
+
+variable "topology_scenario" {
+  description = "Deployment topology scenario. Use full for 3-region topology, dr_pair_r1_r2 for region1 primary + region2 DR pair."
+  type        = string
+  default     = "full"
+
+  validation {
+    condition     = contains(["full", "dr_pair_r1_r2"], var.topology_scenario)
+    error_message = "topology_scenario must be one of: full, dr_pair_r1_r2."
+  }
+}
+
 variable "vpc_region_1_cidr_block" {
   description = "CIDR for Region 1 AWS VPC"
   type        = string
@@ -143,11 +160,10 @@ variable "hcp_provider_account_id_region_3" {
 }
 
 variable "tags" {
-  description = "Tags applied to AWS resources"
+  description = "Base tags applied to AWS resources"
   type        = map(string)
   default = {
-    Environment = "prod"
-    ManagedBy   = "terraform"
-    Project     = "hcp-vault-demo"
+    ManagedBy = "terraform"
+    Project   = "hcp-vault-demo"
   }
 }

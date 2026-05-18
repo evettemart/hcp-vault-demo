@@ -3,6 +3,10 @@ resource "aws_vpc" "this" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = merge(var.tags, {
     Name        = "${var.name_prefix}-${var.region_short}-vpc"
     RegionGroup = var.region_group

@@ -1,4 +1,15 @@
+# -----------------------------------------------------------------------------
+# PROD EXAMPLE (workspace: prod)
+# Copy this file to prod.tfvars and set the prod project_id.
+# -----------------------------------------------------------------------------
+# Set per workspace so prod and non-prod use different HCP projects.
+# Example: non-prod workspace -> non-prod HCP project ID
+# Example: prod workspace     -> prod HCP project ID
 project_id = "<hcp-project-id>"
+
+# full: existing 3-region topology
+# dr_pair_r1_r2: region 1 primary + region 2 secondary pair
+topology_scenario = "full"
 
 aws_state_bucket = "hcp-vault-demo-terraform-state"
 aws_state_key    = "terraform/aws/terraform.tfstate"
@@ -34,3 +45,28 @@ region_1_dr_for_region_3_hvn_cidr   = "172.30.16.0/20"
 vault_public_endpoint = false
 vault_proxy_endpoint  = "DISABLED"
 vault_ip_allowlist    = []
+
+# -----------------------------------------------------------------------------
+# NON-PROD EXAMPLE (workspace: non-prod)
+# Copy this file to non-prod.tfvars and uncomment/adjust the block below.
+# -----------------------------------------------------------------------------
+# project_id        = "<hcp-non-prod-project-id>"
+# topology_scenario = "dr_pair_r1_r2"
+#
+# aws_state_bucket = "hcp-vault-demo-terraform-state"
+# aws_state_key    = "terraform/aws/terraform.tfstate"
+# aws_state_region = "us-east-1"
+#
+# # One Vault cluster in region 1 + DR HVN in region 2.
+# region_1_primary_hvn_id     = "vault-np-r1-primary-hvn"
+# region_1_primary_hvn_region = "eu-west-1"
+# region_1_primary_hvn_cidr   = "172.25.16.0/20"
+# region_1_primary_cluster_id = "vault-np-r1-primary"
+#
+# region_2_dr_for_region_1_hvn_id     = "vault-np-r2-dr-for-r1-hvn"
+# region_2_dr_for_region_1_hvn_region = "us-east-1"
+# region_2_dr_for_region_1_hvn_cidr   = "172.28.16.0/20"
+#
+# vault_public_endpoint = false
+# vault_proxy_endpoint  = "DISABLED"
+# vault_ip_allowlist    = []

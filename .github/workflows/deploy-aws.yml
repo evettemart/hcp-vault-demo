@@ -3,6 +3,14 @@ name: Deploy AWS
 on:
   workflow_dispatch:
     inputs:
+      workspace:
+        description: "Terraform workspace to deploy"
+        required: true
+        default: non-prod
+        type: choice
+        options:
+          - prod
+          - non-prod
       apply:
         description: "Apply Terraform changes"
         required: true
@@ -35,8 +43,11 @@ jobs:
       - name: Terraform Init
         run: terraform init -input=false
 
+      - name: Select Workspace
+        run: terraform workspace select "${{ inputs.workspace }}" || terraform workspace new "${{ inputs.workspace }}"
+
       - name: Terraform Plan
-        run: terraform plan -input=false -out=tfplan
+        run: terraform plan -input=false -var-file="${{ inputs.workspace }}.tfvars" -out=tfplan
 
       - name: Terraform Apply
         if: ${{ inputs.apply == true }}

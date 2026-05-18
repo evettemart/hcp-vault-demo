@@ -1,6 +1,10 @@
 resource "aws_ec2_transit_gateway" "this" {
   description = "Transit Gateway for ${var.region_label}"
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = merge(var.tags, {
     Name        = "${var.name_prefix}-${var.region_short}-tgw"
     RegionGroup = var.region_group

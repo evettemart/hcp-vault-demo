@@ -3,14 +3,25 @@ variable "project_id" {
   type        = string
 }
 
+variable "topology_scenario" {
+  description = "Deployment topology scenario. Use full for 3-region topology, dr_pair_r1_r2 for region1 primary + region2 secondary pair."
+  type        = string
+  default     = "full"
+
+  validation {
+    condition     = contains(["full", "dr_pair_r1_r2"], var.topology_scenario)
+    error_message = "topology_scenario must be one of: full, dr_pair_r1_r2."
+  }
+}
+
 variable "aws_state_bucket" {
-  description = "S3 bucket containing AWS terraform state used for peering targets"
+  description = "S3 bucket containing AWS terraform state used for TGW targets"
   type        = string
   default     = "hcp-vault-demo-terraform-state"
 }
 
 variable "aws_state_key" {
-  description = "S3 key for AWS terraform state used for peering targets"
+  description = "Base S3 key for AWS terraform state (workspace-aware backends append workspace path)"
   type        = string
   default     = "terraform/aws/terraform.tfstate"
 }

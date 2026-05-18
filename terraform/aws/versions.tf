@@ -2,9 +2,10 @@ terraform {
   required_version = ">= 1.5.0"
 
   backend "s3" {
-    bucket = "hcp-vault-demo-terraform-state"
-    key    = "terraform/aws/terraform.tfstate"
-    region = "us-east-1"
+    bucket               = "hcp-vault-demo-terraform-state"
+    key                  = "terraform/aws/terraform.tfstate"
+    region               = "us-east-1"
+    workspace_key_prefix = "terraform/workspaces"
   }
 
   required_providers {
