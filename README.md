@@ -93,8 +93,9 @@ flowchart LR
 - Scenario-based deployment via `topology_scenario` with two architecture profiles:
 - `full` (prod AWS): configured across regions 1, 2, and 3 with 3 performance-replication Vault clusters and 3 DR clusters (see manual DR section below).
 - `dr_pair_r1_r2` (non-prod AWS): configured across regions 1 and 2 with 1 Vault cluster (region 1) and 1 DR path/HVN (region 2).
-- HCP Transit Gateway attachments for active HVNs in the selected scenario
-- HVN routes from active HVNs back to matching AWS regional VPCs via Transit Gateway
+- Optional HVN peering controlled by `enable_hvn_peering` (default `true`)
+- When `enable_hvn_peering = true`, HCP Transit Gateway attachments are created for active HVNs in the selected scenario
+- When `enable_hvn_peering = true`, HVN routes are created from active HVNs back to matching AWS regional VPCs via Transit Gateway
 
 ## Folder Layout
 
@@ -159,10 +160,11 @@ topology_scenario = "full"
 2. Create/select Terraform workspace (`non-prod` or `prod`) in both stacks.
 3. Deploy AWS network + Transit Gateways + RAM shares using workspace tfvars.
 4. Set HCP provider AWS account IDs in workspace tfvars and re-apply AWS.
-5. Deploy HCP Vault stack using the matching workspace tfvars (with matching HCP project ID).
-6. Accept pending Transit Gateway attachments in AWS (if not auto-accepted).
-7. Enable `enable_hcp_tgw_acceptance = true` in AWS workspace tfvars and apply AWS.
-8. Re-run plans for both stacks and confirm no changes.
+5. If `enable_hvn_peering = true`, copy AWS output values (TGW IDs, TGW share ARNs, VPC CIDRs) into `terraform/hcp-vault-aws/vault-cluster/<workspace>.tfvars`.
+6. Deploy HCP Vault stack using the matching workspace tfvars (with matching HCP project ID).
+7. Accept pending Transit Gateway attachments in AWS (if not auto-accepted).
+8. Enable `enable_hcp_tgw_acceptance = true` in AWS workspace tfvars and apply AWS.
+9. Re-run plans for both stacks and confirm no changes.
 
 ## Commands
 
@@ -200,23 +202,37 @@ terraform -chdir=terraform/aws apply -var-file="$TF_ENV.tfvars"
 # 8) Re-apply AWS to create RAM principal associations
 terraform -chdir=terraform/aws apply -var-file="$TF_ENV.tfvars"
 
-# 9) HCP stack: init + same workspace
+# 9) If enable_hvn_peering=true, capture AWS outputs and set these values in terraform/hcp-vault-aws/vault-cluster/$TF_ENV.tfvars:
+# aws_tgw_region_1_id, aws_tgw_region_2_id, aws_tgw_region_3_id
+# aws_tgw_region_1_share_arn, aws_tgw_region_2_share_arn, aws_tgw_region_3_share_arn
+# aws_vpc_region_1_cidr_block, aws_vpc_region_2_cidr_block, aws_vpc_region_3_cidr_block
+terraform -chdir=terraform/aws output tgw_region_1_id
+terraform -chdir=terraform/aws output tgw_region_2_id
+terraform -chdir=terraform/aws output tgw_region_3_id
+terraform -chdir=terraform/aws output tgw_region_1_share_arn
+terraform -chdir=terraform/aws output tgw_region_2_share_arn
+terraform -chdir=terraform/aws output tgw_region_3_share_arn
+terraform -chdir=terraform/aws output vpc_region_1_cidr_block
+terraform -chdir=terraform/aws output vpc_region_2_cidr_block
+terraform -chdir=terraform/aws output vpc_region_3_cidr_block
+
+# 10) HCP stack: init + same workspace
 terraform -chdir=terraform/hcp-vault-aws/vault-cluster init -reconfigure
 terraform -chdir=terraform/hcp-vault-aws/vault-cluster workspace new "$TF_ENV" || terraform -chdir=terraform/hcp-vault-aws/vault-cluster workspace select "$TF_ENV"
 terraform -chdir=terraform/hcp-vault-aws/vault-cluster workspace show
 
-# 10) HCP Vault on AWS using matching workspace tfvars
+# 11) HCP Vault on AWS using matching workspace tfvars
 terraform -chdir=terraform/hcp-vault-aws/vault-cluster plan  -var-file="$TF_ENV.tfvars"
 terraform -chdir=terraform/hcp-vault-aws/vault-cluster apply -var-file="$TF_ENV.tfvars"
 
-# 11) Accept pending Transit Gateway attachments in AWS Console if needed
+# 12) Accept pending Transit Gateway attachments in AWS Console if needed
 # VPC/EC2 -> Transit Gateways -> Transit Gateway Attachments -> Accept
 
-# 12) Enable acceptance in terraform/aws/$TF_ENV.tfvars and apply:
+# 13) Enable acceptance in terraform/aws/$TF_ENV.tfvars and apply:
 # enable_hcp_tgw_acceptance = true
 terraform -chdir=terraform/aws apply -var-file="$TF_ENV.tfvars"
 
-# 13) Final convergence check (same workspace)
+# 14) Final convergence check (same workspace)
 terraform -chdir=terraform/aws plan -var-file="$TF_ENV.tfvars"
 terraform -chdir=terraform/hcp-vault-aws/vault-cluster plan -var-file="$TF_ENV.tfvars"
 ```

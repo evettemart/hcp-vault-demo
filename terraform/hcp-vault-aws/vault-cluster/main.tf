@@ -106,70 +106,58 @@ module "vault_secondary" {
   ip_allowlist      = var.vault_ip_allowlist
 }
 
-data "terraform_remote_state" "aws" {
-  backend   = "s3"
-  workspace = terraform.workspace
-
-  config = {
-    bucket               = var.aws_state_bucket
-    key                  = var.aws_state_key
-    region               = var.aws_state_region
-    workspace_key_prefix = "terraform/workspaces"
-  }
-}
-
 locals {
   connectivity = merge(
     {
       region_1_primary = {
         hvn_key            = "region_1_primary"
         tgw_attachment_id  = var.region_1_primary_to_aws_tgw_attachment_id
-        transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_1_id
-        resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_1_share_arn
+        transit_gateway_id = var.aws_tgw_region_1_id
+        resource_share_arn = var.aws_tgw_region_1_share_arn
         route_id           = var.region_1_primary_to_aws_route_id
-        destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_1_cidr_block
+        destination_cidr   = var.aws_vpc_region_1_cidr_block
       }
       region_2_dr_for_region_1 = {
         hvn_key            = "region_2_dr_for_region_1"
         tgw_attachment_id  = var.region_2_dr_for_region_1_to_aws_tgw_attachment_id
-        transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_2_id
-        resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_2_share_arn
+        transit_gateway_id = var.aws_tgw_region_2_id
+        resource_share_arn = var.aws_tgw_region_2_share_arn
         route_id           = var.region_2_dr_for_region_1_to_aws_route_id
-        destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_2_cidr_block
+        destination_cidr   = var.aws_vpc_region_2_cidr_block
       }
     },
     var.topology_scenario == "full" ? {
       region_2_primary = {
         hvn_key            = "region_2_primary"
         tgw_attachment_id  = var.region_2_primary_to_aws_tgw_attachment_id
-        transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_2_id
-        resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_2_share_arn
+        transit_gateway_id = var.aws_tgw_region_2_id
+        resource_share_arn = var.aws_tgw_region_2_share_arn
         route_id           = var.region_2_primary_to_aws_route_id
-        destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_2_cidr_block
+        destination_cidr   = var.aws_vpc_region_2_cidr_block
       }
       region_3_primary = {
         hvn_key            = "region_3_primary"
         tgw_attachment_id  = var.region_3_primary_to_aws_tgw_attachment_id
-        transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_3_id
-        resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_3_share_arn
+        transit_gateway_id = var.aws_tgw_region_3_id
+        resource_share_arn = var.aws_tgw_region_3_share_arn
         route_id           = var.region_3_primary_to_aws_route_id
-        destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_3_cidr_block
+        destination_cidr   = var.aws_vpc_region_3_cidr_block
       }
       region_3_dr_for_region_2 = {
         hvn_key            = "region_3_dr_for_region_2"
         tgw_attachment_id  = var.region_3_dr_for_region_2_to_aws_tgw_attachment_id
-        transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_3_id
-        resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_3_share_arn
+        transit_gateway_id = var.aws_tgw_region_3_id
+        resource_share_arn = var.aws_tgw_region_3_share_arn
         route_id           = var.region_3_dr_for_region_2_to_aws_route_id
-        destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_3_cidr_block
+        destination_cidr   = var.aws_vpc_region_3_cidr_block
       }
       region_1_dr_for_region_3 = {
         hvn_key            = "region_1_dr_for_region_3"
         tgw_attachment_id  = var.region_1_dr_for_region_3_to_aws_tgw_attachment_id
-        transit_gateway_id = data.terraform_remote_state.aws.outputs.tgw_region_1_id
-        resource_share_arn = data.terraform_remote_state.aws.outputs.tgw_region_1_share_arn
+        transit_gateway_id = var.aws_tgw_region_1_id
+        resource_share_arn = var.aws_tgw_region_1_share_arn
         route_id           = var.region_1_dr_for_region_3_to_aws_route_id
-        destination_cidr   = data.terraform_remote_state.aws.outputs.vpc_region_1_cidr_block
+        destination_cidr   = var.aws_vpc_region_1_cidr_block
       }
     } : {}
   )
@@ -177,7 +165,7 @@ locals {
 
 module "hvn_aws_connectivity" {
   source   = "../modules/hvn_aws_connectivity"
-  for_each = local.connectivity
+  for_each = var.enable_hvn_peering ? local.connectivity : {}
 
   hvn_id                        = module.hvn[each.value.hvn_key].hvn_id
   hvn_link                      = module.hvn[each.value.hvn_key].self_link

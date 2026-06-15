@@ -14,22 +14,64 @@ variable "topology_scenario" {
   }
 }
 
-variable "aws_state_bucket" {
-  description = "S3 bucket containing AWS terraform state used for TGW targets"
-  type        = string
-  default     = "hcp-vault-demo-terraform-state"
+variable "enable_hvn_peering" {
+  description = "Enable HVN peering connectivity to AWS Transit Gateways (attachments and HVN routes)"
+  type        = bool
+  default     = true
 }
 
-variable "aws_state_key" {
-  description = "Base S3 key for AWS terraform state (workspace-aware backends append workspace path)"
+variable "aws_tgw_region_1_id" {
+  description = "AWS Transit Gateway ID for Region 1"
   type        = string
-  default     = "terraform/aws/terraform.tfstate"
+  default     = null
 }
 
-variable "aws_state_region" {
-  description = "AWS region where S3 backend bucket exists"
+variable "aws_tgw_region_2_id" {
+  description = "AWS Transit Gateway ID for Region 2"
   type        = string
-  default     = "us-east-1"
+  default     = null
+}
+
+variable "aws_tgw_region_3_id" {
+  description = "AWS Transit Gateway ID for Region 3 (required when topology_scenario is full)"
+  type        = string
+  default     = null
+}
+
+variable "aws_tgw_region_1_share_arn" {
+  description = "AWS RAM share ARN for Region 1 Transit Gateway"
+  type        = string
+  default     = null
+}
+
+variable "aws_tgw_region_2_share_arn" {
+  description = "AWS RAM share ARN for Region 2 Transit Gateway"
+  type        = string
+  default     = null
+}
+
+variable "aws_tgw_region_3_share_arn" {
+  description = "AWS RAM share ARN for Region 3 Transit Gateway (required when topology_scenario is full)"
+  type        = string
+  default     = null
+}
+
+variable "aws_vpc_region_1_cidr_block" {
+  description = "AWS VPC CIDR block for Region 1"
+  type        = string
+  default     = null
+}
+
+variable "aws_vpc_region_2_cidr_block" {
+  description = "AWS VPC CIDR block for Region 2"
+  type        = string
+  default     = null
+}
+
+variable "aws_vpc_region_3_cidr_block" {
+  description = "AWS VPC CIDR block for Region 3 (required when topology_scenario is full)"
+  type        = string
+  default     = null
 }
 
 variable "region_1_primary_hvn_id" {
@@ -273,4 +315,39 @@ variable "region_1_dr_for_region_3_to_aws_route_id" {
   description = "Route ID from Region 1 DR HVN (for Region 3) to AWS VPC"
   type        = string
   default     = "r1-dr-for-r3-to-aws-vpc"
+}
+
+locals {
+  hvn_peering_requires_region_1_2_inputs = (
+    !var.enable_hvn_peering || (
+      var.aws_tgw_region_1_id != null &&
+      var.aws_tgw_region_2_id != null &&
+      var.aws_tgw_region_1_share_arn != null &&
+      var.aws_tgw_region_2_share_arn != null &&
+      var.aws_vpc_region_1_cidr_block != null &&
+      var.aws_vpc_region_2_cidr_block != null
+    )
+  )
+
+  full_topology_requires_region_3_inputs = (
+    !var.enable_hvn_peering || var.topology_scenario != "full" || (
+      var.aws_tgw_region_3_id != null &&
+      var.aws_tgw_region_3_share_arn != null &&
+      var.aws_vpc_region_3_cidr_block != null
+    )
+  )
+}
+
+check "hvn_peering_region_1_2_inputs" {
+  assert {
+    condition     = local.hvn_peering_requires_region_1_2_inputs
+    error_message = "When enable_hvn_peering is true, aws_tgw_region_1_id, aws_tgw_region_2_id, aws_tgw_region_1_share_arn, aws_tgw_region_2_share_arn, aws_vpc_region_1_cidr_block, and aws_vpc_region_2_cidr_block must be set."
+  }
+}
+
+check "full_topology_region_3_inputs" {
+  assert {
+    condition     = local.full_topology_requires_region_3_inputs
+    error_message = "When topology_scenario is full, aws_tgw_region_3_id, aws_tgw_region_3_share_arn, and aws_vpc_region_3_cidr_block must be set."
+  }
 }

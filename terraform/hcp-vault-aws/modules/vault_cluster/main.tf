@@ -17,6 +17,6 @@ resource "hcp_vault_cluster" "this" {
   }
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }

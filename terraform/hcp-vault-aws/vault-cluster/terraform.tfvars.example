@@ -11,9 +11,19 @@ project_id = "<hcp-project-id>"
 # dr_pair_r1_r2: region 1 primary + region 2 secondary pair
 topology_scenario = "full"
 
-aws_state_bucket = "hcp-vault-demo-terraform-state"
-aws_state_key    = "terraform/aws/terraform.tfstate"
-aws_state_region = "us-east-1"
+# Set to false to skip HVN peering creation (TGW attachments + HVN routes).
+enable_hvn_peering = true
+
+# Provide AWS connectivity values
+aws_tgw_region_1_id        = "<tgw-region-1-id>"
+aws_tgw_region_2_id        = "<tgw-region-2-id>"
+aws_tgw_region_3_id        = "<tgw-region-3-id>"
+aws_tgw_region_1_share_arn = "<tgw-region-1-share-arn>"
+aws_tgw_region_2_share_arn = "<tgw-region-2-share-arn>"
+aws_tgw_region_3_share_arn = "<tgw-region-3-share-arn>"
+aws_vpc_region_1_cidr_block = "10.20.0.0/16"
+aws_vpc_region_2_cidr_block = "10.21.0.0/16"
+aws_vpc_region_3_cidr_block = "10.22.0.0/16"
 
 region_1_primary_hvn_id     = "vault-r1-primary-hvn"
 region_1_primary_hvn_region = "eu-west-1"
@@ -52,10 +62,15 @@ vault_ip_allowlist    = []
 # -----------------------------------------------------------------------------
 # project_id        = "<hcp-non-prod-project-id>"
 # topology_scenario = "dr_pair_r1_r2"
+# enable_hvn_peering = true
 #
-# aws_state_bucket = "hcp-vault-demo-terraform-state"
-# aws_state_key    = "terraform/aws/terraform.tfstate"
-# aws_state_region = "us-east-1"
+# # Region 3 values are optional in dr_pair_r1_r2 topology.
+# aws_tgw_region_1_id        = "<tgw-region-1-id>"
+# aws_tgw_region_2_id        = "<tgw-region-2-id>"
+# aws_tgw_region_1_share_arn = "<tgw-region-1-share-arn>"
+# aws_tgw_region_2_share_arn = "<tgw-region-2-share-arn>"
+# aws_vpc_region_1_cidr_block = "10.20.0.0/16"
+# aws_vpc_region_2_cidr_block = "10.21.0.0/16"
 #
 # # One Vault cluster in region 1 + DR HVN in region 2.
 # region_1_primary_hvn_id     = "vault-np-r1-primary-hvn"

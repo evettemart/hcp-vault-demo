@@ -5,7 +5,7 @@ resource "hcp_aws_transit_gateway_attachment" "this" {
   resource_share_arn            = var.resource_share_arn
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = fasle
   }
 }
 
@@ -16,6 +16,6 @@ resource "hcp_hvn_route" "this" {
   target_link      = hcp_aws_transit_gateway_attachment.this.self_link
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
