@@ -1,9 +1,12 @@
 # HCP Vault Demo (AWS)
 
-This demo creates the topology shown in your diagram using two Terraform stacks:
+This demo creates the topology shown in your diagram using two Terraform stacks.
+This is a demo repository, and should be reviewed and configuration selected as per your requirements.
 
 - `terraform/aws`
 - `terraform/hcp-vault-aws/vault-cluster`
+
+This repository deploys AWS and HCP Vault resources only.
 
 The implementation is based on the structure and patterns in `vault-hcp-dedicated-migration/terraform/aws` and `vault-hcp-dedicated-migration/terraform/hcp-vault-aws`.
 
@@ -23,16 +26,21 @@ Non-prod architecture:
 
 
 
-## Region Mapping
+## AWS Region Mapping
 
-| System | Region Group | Platform Region | HCP Region |
+| Cluster | AWS Region | HCP HVN Region | Role |
 |---|---|---|---|
-| AWS | Group 1 | eu-west-1 (Ireland) | eu-west-1 (Ireland) |
-| AWS | Group 2 | us-east-1 (N. Virginia) | us-east-1 (N. Virginia) |
-| AWS | Group 3 | ap-southeast-1 (Singapore) | ap-southeast-1 (Singapore) |
-| Azure | Group 1 | east-us | westeurope |
-| Azure | Group 2 | central-India | eastus |
-| Azure | Group 3 | west-us | southeastasia |
+| Region 1 / cluster_1 | ap-southeast-1 (Singapore) | ap-southeast-1 (Singapore) | Primary |
+| Region 2 / cluster_2 | ap-northeast-1 (Tokyo) | ap-northeast-1 (Tokyo) | DR HVN only |
+| Region 3 / cluster_3 | eu-west-1 (Ireland) | eu-west-1 (Ireland) | Secondary to cluster_1 |
+| Region 4 / cluster_4 | eu-west-2 (London) | eu-west-2 (London) | DR HVN only |
+| Region 5 / cluster_5 | us-east-1 (N. Virginia) | us-east-1 (N. Virginia) | Secondary to cluster_1 |
+| Region 6 / cluster_6 | us-east-2 (Ohio) | us-east-2 (Ohio) | DR HVN only |
+
+Environment behavior:
+
+- non-prod: deploys regions 1 and 2 only.
+- prod: deploys regions 1, 2, 3, 4, 5, and 6.
 
 ### `terraform/aws`
 
@@ -46,7 +54,7 @@ Non-prod architecture:
 ### `terraform/hcp-vault-aws/vault-cluster`
 
 - Scenario-based deployment via `topology_scenario` with two architecture profiles:
-- `prod`: creates Vault clusters for `cluster_1` (primary), `cluster_2` and `cluster_3` (secondary performance replicas to cluster_1). For `cluster_4`..`cluster_6`, Terraform creates HVNs only; Vault clusters are manual.
+- `prod`: creates Vault clusters for `cluster_1` (primary), `cluster_3` (secondary), and `cluster_5` (secondary). For `cluster_2`, `cluster_4`, and `cluster_6`, Terraform creates HVNs only; DR Vault clusters are manual.
 - `non-prod`: creates `cluster_1` as the only Terraform-managed Vault cluster. The DR secondary (`cluster_2`) is created manually in HCP.
 - Optional HVN peering controlled by `enable_hvn_peering` (default `true`)
 - When `enable_hvn_peering = true`, HCP Transit Gateway attachments are created for active HVNs in the selected scenario
@@ -108,7 +116,7 @@ topology_scenario = "non-prod"
 # prod.tfvars
 project_id = "<hcp-prod-project-id>"
 topology_scenario = "prod"
-# Prod uses cluster_1..cluster_6 for HVN/network mapping; Terraform creates Vault clusters for cluster_1..cluster_3.
+# Prod uses cluster_1..cluster_6 for HVN/network mapping; Terraform creates Vault clusters for cluster_1, cluster_3, and cluster_5.
 ```
 
 ## Deployment Order
@@ -122,6 +130,13 @@ topology_scenario = "prod"
 7. Accept pending Transit Gateway attachments in AWS (if not auto-accepted).
 8. Enable `enable_hcp_tgw_acceptance = true` in AWS workspace tfvars and apply AWS.
 9. Re-run plans for both stacks and confirm no changes.
+
+Workspace tfvars expectations:
+
+- `terraform/aws/non-prod.tfvars`: set `topology_scenario = "non-prod"` and keep regions 1 and 2 only.
+- `terraform/aws/prod.tfvars`: set `topology_scenario = "prod"` and set `enable_region_3..enable_region_6 = true`.
+- `terraform/hcp-vault-aws/vault-cluster/non-prod.tfvars`: use `cluster_1` and `cluster_2` with AP regions.
+- `terraform/hcp-vault-aws/vault-cluster/prod.tfvars`: use `cluster_1..cluster_6` with region mapping shown above.
 
 ## Commands
 
@@ -175,12 +190,21 @@ terraform -chdir=terraform/aws apply -var-file="$TF_ENV.tfvars"
 terraform -chdir=terraform/aws output tgw_region_1_id
 terraform -chdir=terraform/aws output tgw_region_2_id
 terraform -chdir=terraform/aws output tgw_region_3_id
+terraform -chdir=terraform/aws output tgw_region_4_id
+terraform -chdir=terraform/aws output tgw_region_5_id
+terraform -chdir=terraform/aws output tgw_region_6_id
 terraform -chdir=terraform/aws output tgw_region_1_share_arn
 terraform -chdir=terraform/aws output tgw_region_2_share_arn
 terraform -chdir=terraform/aws output tgw_region_3_share_arn
+terraform -chdir=terraform/aws output tgw_region_4_share_arn
+terraform -chdir=terraform/aws output tgw_region_5_share_arn
+terraform -chdir=terraform/aws output tgw_region_6_share_arn
 terraform -chdir=terraform/aws output vpc_region_1_cidr_block
 terraform -chdir=terraform/aws output vpc_region_2_cidr_block
 terraform -chdir=terraform/aws output vpc_region_3_cidr_block
+terraform -chdir=terraform/aws output vpc_region_4_cidr_block
+terraform -chdir=terraform/aws output vpc_region_5_cidr_block
+terraform -chdir=terraform/aws output vpc_region_6_cidr_block
 
 # 10) HCP stack: init + same workspace
 terraform -chdir=terraform/hcp-vault-aws/vault-cluster init -reconfigure
