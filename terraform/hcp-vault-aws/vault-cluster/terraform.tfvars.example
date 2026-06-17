@@ -1,87 +1,142 @@
 # -----------------------------------------------------------------------------
 # PROD EXAMPLE (workspace: prod)
-# Copy this file to prod.tfvars and set the prod project_id.
 # -----------------------------------------------------------------------------
-# Set per workspace so prod and non-prod use different HCP projects.
-# Example: non-prod workspace -> non-prod HCP project ID
-# Example: prod workspace     -> prod HCP project ID
 project_id = "<hcp-project-id>"
 
-# full: existing 3-region topology
-# dr_pair_r1_r2: region 1 primary + region 2 secondary pair
-topology_scenario = "full"
-
-# Set to false to skip HVN peering creation (TGW attachments + HVN routes).
+topology_scenario  = "prod"
 enable_hvn_peering = true
 
-# Provide AWS connectivity values
-aws_tgw_region_1_id        = "<tgw-region-1-id>"
-aws_tgw_region_2_id        = "<tgw-region-2-id>"
-aws_tgw_region_3_id        = "<tgw-region-3-id>"
-aws_tgw_region_1_share_arn = "<tgw-region-1-share-arn>"
-aws_tgw_region_2_share_arn = "<tgw-region-2-share-arn>"
-aws_tgw_region_3_share_arn = "<tgw-region-3-share-arn>"
-aws_vpc_region_1_cidr_block = "10.20.0.0/16"
-aws_vpc_region_2_cidr_block = "10.21.0.0/16"
-aws_vpc_region_3_cidr_block = "10.22.0.0/16"
+cluster_configs = {
+  cluster_1 = {
+    hvn_id            = "vault-c1-hvn"
+    hvn_region        = "ap-southeast-1"
+    hvn_cidr          = "172.25.16.0/24"
+    cluster_id        = "vault-prod-c1-primary"
+    tier              = "plus_small"
+    tgw_attachment_id = "c1-to-aws-tgw"
+    route_id          = "c1-to-aws-vpc"
+  }
+  cluster_2 = {
+    hvn_id            = "vault-c2-hvn"
+    hvn_region        = "eu-west-1"
+    hvn_cidr          = "172.26.16.0/24"
+    cluster_id        = "vault-prod-c2-pr"
+    tier              = "plus_small"
+    tgw_attachment_id = "c2-to-aws-tgw"
+    route_id          = "c2-to-aws-vpc"
+  }
+  cluster_3 = {
+    hvn_id            = "vault-c3-hvn"
+    hvn_region        = "us-east-1"
+    hvn_cidr          = "172.27.16.0/24"
+    cluster_id        = "vault-prod-c3-pr"
+    tier              = "plus_small"
+    tgw_attachment_id = "c3-to-aws-tgw"
+    route_id          = "c3-to-aws-vpc"
+  }
+  cluster_4 = {
+    hvn_id            = "vault-c4-hvn"
+    hvn_region        = "ap-northeast-1"
+    hvn_cidr          = "172.28.16.0/24"
+    cluster_id        = "vault-prod-c4-dr"
+    tier              = "plus_small"
+    tgw_attachment_id = "c4-to-aws-tgw"
+    route_id          = "c4-to-aws-vpc"
+  }
+  cluster_5 = {
+    hvn_id            = "vault-c5-hvn"
+    hvn_region        = "eu-west-2"
+    hvn_cidr          = "172.29.16.0/24"
+    cluster_id        = "vault-prod-c5-dr"
+    tier              = "plus_small"
+    tgw_attachment_id = "c5-to-aws-tgw"
+    route_id          = "c5-to-aws-vpc"
+  }
+  cluster_6 = {
+    hvn_id            = "vault-c6-hvn"
+    hvn_region        = "us-east-2"
+    hvn_cidr          = "172.30.16.0/24"
+    cluster_id        = "vault-prod-c6-dr"
+    tier              = "plus_small"
+    tgw_attachment_id = "c6-to-aws-tgw"
+    route_id          = "c6-to-aws-vpc"
+  }
+}
 
-region_1_primary_hvn_id     = "vault-r1-primary-hvn"
-region_1_primary_hvn_region = "eu-west-1"
-region_1_primary_hvn_cidr   = "172.25.16.0/20"
-region_1_primary_cluster_id = "vault-r1-primary"
+aws_region_connectivity = {
+  cluster_1 = {
+    transit_gateway_id = "<tgw-region-1-id>"
+    resource_share_arn = "<tgw-region-1-share-arn>"
+    destination_cidr   = "10.20.0.0/24"
+  }
+  cluster_2 = {
+    transit_gateway_id = "<tgw-region-2-id>"
+    resource_share_arn = "<tgw-region-2-share-arn>"
+    destination_cidr   = "10.21.0.0/24"
+  }
+  cluster_3 = {
+    transit_gateway_id = "<tgw-region-3-id>"
+    resource_share_arn = "<tgw-region-3-share-arn>"
+    destination_cidr   = "10.22.0.0/24"
+  }
+  cluster_4 = {
+    transit_gateway_id = "<tgw-region-4-id>"
+    resource_share_arn = "<tgw-region-4-share-arn>"
+    destination_cidr   = "10.23.0.0/24"
+  }
+  cluster_5 = {
+    transit_gateway_id = "<tgw-region-5-id>"
+    resource_share_arn = "<tgw-region-5-share-arn>"
+    destination_cidr   = "10.24.0.0/24"
+  }
+  cluster_6 = {
+    transit_gateway_id = "<tgw-region-6-id>"
+    resource_share_arn = "<tgw-region-6-share-arn>"
+    destination_cidr   = "10.25.0.0/24"
+  }
+}
 
-region_2_primary_hvn_id     = "vault-r2-primary-hvn"
-region_2_primary_hvn_region = "us-east-1"
-region_2_primary_hvn_cidr   = "172.26.16.0/20"
-region_2_primary_cluster_id = "vault-r2-primary"
-
-region_3_primary_hvn_id     = "vault-r3-primary-hvn"
-region_3_primary_hvn_region = "ap-southeast-1"
-region_3_primary_hvn_cidr   = "172.27.16.0/20"
-region_3_primary_cluster_id = "vault-r3-primary"
-
-region_2_dr_for_region_1_hvn_id     = "vault-r2-dr-for-r1-hvn"
-region_2_dr_for_region_1_hvn_region = "us-east-1"
-region_2_dr_for_region_1_hvn_cidr   = "172.28.16.0/20"
-
-region_3_dr_for_region_2_hvn_id     = "vault-r3-dr-for-r2-hvn"
-region_3_dr_for_region_2_hvn_region = "ap-southeast-1"
-region_3_dr_for_region_2_hvn_cidr   = "172.29.16.0/20"
-
-region_1_dr_for_region_3_hvn_id     = "vault-r1-dr-for-r3-hvn"
-region_1_dr_for_region_3_hvn_region = "eu-west-1"
-region_1_dr_for_region_3_hvn_cidr   = "172.30.16.0/20"
-
-vault_public_endpoint = false
+vault_public_endpoint = true
 vault_proxy_endpoint  = "DISABLED"
 vault_ip_allowlist    = []
 
 # -----------------------------------------------------------------------------
 # NON-PROD EXAMPLE (workspace: non-prod)
-# Copy this file to non-prod.tfvars and uncomment/adjust the block below.
 # -----------------------------------------------------------------------------
-# project_id        = "<hcp-non-prod-project-id>"
-# topology_scenario = "dr_pair_r1_r2"
+# project_id         = "<hcp-non-prod-project-id>"
+# topology_scenario  = "non-prod"
 # enable_hvn_peering = true
 #
-# # Region 3 values are optional in dr_pair_r1_r2 topology.
-# aws_tgw_region_1_id        = "<tgw-region-1-id>"
-# aws_tgw_region_2_id        = "<tgw-region-2-id>"
-# aws_tgw_region_1_share_arn = "<tgw-region-1-share-arn>"
-# aws_tgw_region_2_share_arn = "<tgw-region-2-share-arn>"
-# aws_vpc_region_1_cidr_block = "10.20.0.0/16"
-# aws_vpc_region_2_cidr_block = "10.21.0.0/16"
+# cluster_configs = {
+#   cluster_1 = {
+#     hvn_id            = "vault-c1-hvn"
+#     hvn_region        = "ap-southeast-1"
+#     hvn_cidr          = "172.25.16.0/24"
+#     cluster_id        = "vault-nonprod-c1-primary"
+#     tier              = "plus_small"
+#     tgw_attachment_id = "c1-to-aws-tgw"
+#     route_id          = "c1-to-aws-vpc"
+#   }
+#   cluster_2 = {
+#     hvn_id            = "vault-c2-hvn"
+#     hvn_region        = "ap-northeast-1"
+#     hvn_cidr          = "172.28.16.0/24"
+#     cluster_id        = "vault-nonprod-c2-dr"
+#     tier              = "plus_small"
+#     tgw_attachment_id = "c2-to-aws-tgw"
+#     route_id          = "c2-to-aws-vpc"
+#   }
+# }
 #
-# # One Vault cluster in region 1 + DR HVN in region 2.
-# region_1_primary_hvn_id     = "vault-np-r1-primary-hvn"
-# region_1_primary_hvn_region = "eu-west-1"
-# region_1_primary_hvn_cidr   = "172.25.16.0/20"
-# region_1_primary_cluster_id = "vault-np-r1-primary"
-#
-# region_2_dr_for_region_1_hvn_id     = "vault-np-r2-dr-for-r1-hvn"
-# region_2_dr_for_region_1_hvn_region = "us-east-1"
-# region_2_dr_for_region_1_hvn_cidr   = "172.28.16.0/20"
-#
-# vault_public_endpoint = false
-# vault_proxy_endpoint  = "DISABLED"
-# vault_ip_allowlist    = []
+# aws_region_connectivity = {
+#   cluster_1 = {
+#     transit_gateway_id = "<tgw-region-1-id>"
+#     resource_share_arn = "<tgw-region-1-share-arn>"
+#     destination_cidr   = "10.20.0.0/24"
+#   }
+#   cluster_2 = {
+#     transit_gateway_id = "<tgw-region-2-id>"
+#     resource_share_arn = "<tgw-region-2-share-arn>"
+#     destination_cidr   = "10.21.0.0/24"
+#   }
+# }
