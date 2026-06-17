@@ -6,6 +6,6 @@ resource "hcp_hvn" "this" {
   project_id     = var.project_id
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 }

@@ -16,6 +16,11 @@ resource "aws_vpc" "this" {
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
+  lifecycle {
+    # Force IGW replacement when VPC is replaced so the old VPC can be deleted cleanly.
+    replace_triggered_by = [aws_vpc.this.id]
+  }
+
   tags = merge(var.tags, {
     Name        = "${var.name_prefix}-${var.region_short}-igw"
     RegionGroup = var.region_group

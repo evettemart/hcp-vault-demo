@@ -1,89 +1,99 @@
-output "cluster_region_1_id" {
+output "cluster_1_id" {
   value       = try(module.vault_primary.cluster_id, null)
-  description = "Region 1 primary Vault cluster ID"
+  description = "Cluster 1 ID (primary)"
 }
 
-output "cluster_region_2_id" {
-  value       = try(module.vault_secondary["region_2_primary"].cluster_id, null)
-  description = "Region 2 primary Vault cluster ID"
+output "cluster_2_id" {
+  value       = try(module.vault_secondary_to_cluster_1["cluster_2"].cluster_id, null)
+  description = "Cluster 2 ID (manual DR cluster; null when not Terraform-managed)"
 }
 
-output "cluster_region_3_id" {
-  value       = try(module.vault_secondary["region_3_primary"].cluster_id, null)
-  description = "Region 3 primary Vault cluster ID"
+output "cluster_3_id" {
+  value       = try(module.vault_secondary_to_cluster_1["cluster_3"].cluster_id, null)
+  description = "Cluster 3 ID (performance replica to cluster 1 in prod; null in non-prod)"
 }
 
-output "cluster_region_1_public_endpoint" {
+output "cluster_5_id" {
+  value       = try(module.vault_secondary_to_cluster_1["cluster_5"].cluster_id, null)
+  description = "Cluster 5 ID (performance replica to cluster 1 in prod; null in non-prod)"
+}
+
+output "cluster_1_public_endpoint" {
   value       = try(module.vault_primary.public_endpoint_url, null)
-  description = "Region 1 public endpoint"
+  description = "Cluster 1 public endpoint"
 }
 
-output "cluster_region_2_public_endpoint" {
-  value       = try(module.vault_secondary["region_2_primary"].public_endpoint_url, null)
-  description = "Region 2 public endpoint"
+output "cluster_2_public_endpoint" {
+  value       = try(module.vault_secondary_to_cluster_1["cluster_2"].public_endpoint_url, null)
+  description = "Cluster 2 public endpoint (null when not Terraform-managed)"
 }
 
-output "cluster_region_3_public_endpoint" {
-  value       = try(module.vault_secondary["region_3_primary"].public_endpoint_url, null)
-  description = "Region 3 public endpoint"
+output "cluster_3_public_endpoint" {
+  value       = try(module.vault_secondary_to_cluster_1["cluster_3"].public_endpoint_url, null)
+  description = "Cluster 3 public endpoint"
 }
 
-output "provider_tgw_attachment_region_1" {
-  value       = try(module.hvn_aws_connectivity["region_1_primary"].provider_transit_gateway_attachment_id, null)
-  description = "Provider-side transit gateway attachment ID for region 1 HVN"
+output "cluster_5_public_endpoint" {
+  value       = try(module.vault_secondary_to_cluster_1["cluster_5"].public_endpoint_url, null)
+  description = "Cluster 5 public endpoint"
 }
 
-output "provider_tgw_attachment_region_2" {
-  value       = try(module.hvn_aws_connectivity["region_2_primary"].provider_transit_gateway_attachment_id, null)
-  description = "Provider-side transit gateway attachment ID for region 2 HVN"
+output "provider_tgw_attachment_cluster_1" {
+  value       = try(module.hvn_aws_connectivity["cluster_1"].provider_transit_gateway_attachment_id, null)
+  description = "Provider-side TGW attachment ID for cluster 1"
 }
 
-output "provider_tgw_attachment_region_3" {
-  value       = try(module.hvn_aws_connectivity["region_3_primary"].provider_transit_gateway_attachment_id, null)
-  description = "Provider-side transit gateway attachment ID for region 3 HVN"
+output "provider_tgw_attachment_cluster_2" {
+  value       = try(module.hvn_aws_connectivity["cluster_2"].provider_transit_gateway_attachment_id, null)
+  description = "Provider-side TGW attachment ID for cluster 2"
 }
 
-output "provider_tgw_attachment_dr_region_2_for_region_1" {
-  value       = try(module.hvn_aws_connectivity["region_2_dr_for_region_1"].provider_transit_gateway_attachment_id, null)
-  description = "Provider-side transit gateway attachment ID for region 2 DR HVN (for region 1)"
+output "provider_tgw_attachment_cluster_3" {
+  value       = try(module.hvn_aws_connectivity["cluster_3"].provider_transit_gateway_attachment_id, null)
+  description = "Provider-side TGW attachment ID for cluster 3"
 }
 
-output "provider_tgw_attachment_dr_region_3_for_region_2" {
-  value       = try(module.hvn_aws_connectivity["region_3_dr_for_region_2"].provider_transit_gateway_attachment_id, null)
-  description = "Provider-side transit gateway attachment ID for region 3 DR HVN (for region 2)"
+output "provider_tgw_attachment_cluster_4" {
+  value       = try(module.hvn_aws_connectivity["cluster_4"].provider_transit_gateway_attachment_id, null)
+  description = "Provider-side TGW attachment ID for cluster 4"
 }
 
-output "provider_tgw_attachment_dr_region_1_for_region_3" {
-  value       = try(module.hvn_aws_connectivity["region_1_dr_for_region_3"].provider_transit_gateway_attachment_id, null)
-  description = "Provider-side transit gateway attachment ID for region 1 DR HVN (for region 3)"
+output "provider_tgw_attachment_cluster_5" {
+  value       = try(module.hvn_aws_connectivity["cluster_5"].provider_transit_gateway_attachment_id, null)
+  description = "Provider-side TGW attachment ID for cluster 5"
 }
 
-output "hvn_provider_account_id_region_1_primary" {
-  value       = try(module.hvn["region_1_primary"].provider_account_id, null)
-  description = "HCP provider AWS account ID for Region 1 primary HVN"
+output "provider_tgw_attachment_cluster_6" {
+  value       = try(module.hvn_aws_connectivity["cluster_6"].provider_transit_gateway_attachment_id, null)
+  description = "Provider-side TGW attachment ID for cluster 6"
 }
 
-output "hvn_provider_account_id_region_2_primary" {
-  value       = try(module.hvn["region_2_primary"].provider_account_id, null)
-  description = "HCP provider AWS account ID for Region 2 primary HVN"
+output "hvn_provider_account_id_cluster_1" {
+  value       = try(module.hvn["cluster_1"].provider_account_id, null)
+  description = "HCP provider AWS account ID for cluster 1 HVN"
 }
 
-output "hvn_provider_account_id_region_3_primary" {
-  value       = try(module.hvn["region_3_primary"].provider_account_id, null)
-  description = "HCP provider AWS account ID for Region 3 primary HVN"
+output "hvn_provider_account_id_cluster_2" {
+  value       = try(module.hvn["cluster_2"].provider_account_id, null)
+  description = "HCP provider AWS account ID for cluster 2 HVN"
 }
 
-output "hvn_provider_account_id_region_2_dr_for_region_1" {
-  value       = try(module.hvn["region_2_dr_for_region_1"].provider_account_id, null)
-  description = "HCP provider AWS account ID for Region 2 DR HVN"
+output "hvn_provider_account_id_cluster_3" {
+  value       = try(module.hvn["cluster_3"].provider_account_id, null)
+  description = "HCP provider AWS account ID for cluster 3 HVN"
 }
 
-output "hvn_provider_account_id_region_3_dr_for_region_2" {
-  value       = try(module.hvn["region_3_dr_for_region_2"].provider_account_id, null)
-  description = "HCP provider AWS account ID for Region 3 DR HVN"
+output "hvn_provider_account_id_cluster_4" {
+  value       = try(module.hvn["cluster_4"].provider_account_id, null)
+  description = "HCP provider AWS account ID for cluster 4 HVN"
 }
 
-output "hvn_provider_account_id_region_1_dr_for_region_3" {
-  value       = try(module.hvn["region_1_dr_for_region_3"].provider_account_id, null)
-  description = "HCP provider AWS account ID for Region 1 DR HVN"
+output "hvn_provider_account_id_cluster_5" {
+  value       = try(module.hvn["cluster_5"].provider_account_id, null)
+  description = "HCP provider AWS account ID for cluster 5 HVN"
+}
+
+output "hvn_provider_account_id_cluster_6" {
+  value       = try(module.hvn["cluster_6"].provider_account_id, null)
+  description = "HCP provider AWS account ID for cluster 6 HVN"
 }

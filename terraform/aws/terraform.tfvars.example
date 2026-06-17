@@ -7,16 +7,16 @@ aws_region_2                 = "us-east-1"
 aws_region_3                 = "ap-southeast-1"
 environment                  = "prod"
 name_prefix                  = "vault-hcp-demo"
-topology_scenario            = "full"
-vpc_region_1_cidr_block      = "10.20.0.0/16"
-public_subnet_region_1_cidr  = "10.20.1.0/24"
-private_subnet_region_1_cidr = "10.20.2.0/24"
-vpc_region_2_cidr_block      = "10.21.0.0/16"
-public_subnet_region_2_cidr  = "10.21.1.0/24"
-private_subnet_region_2_cidr = "10.21.2.0/24"
-vpc_region_3_cidr_block      = "10.22.0.0/16"
-public_subnet_region_3_cidr  = "10.22.1.0/24"
-private_subnet_region_3_cidr = "10.22.2.0/24"
+topology_scenario            = "prod"
+vpc_region_1_cidr_block      = "10.20.0.0/24"
+public_subnet_region_1_cidr  = "10.20.0.0/25"
+private_subnet_region_1_cidr = "10.20.0.128/25"
+vpc_region_2_cidr_block      = "10.21.0.0/24"
+public_subnet_region_2_cidr  = "10.21.0.0/25"
+private_subnet_region_2_cidr = "10.21.0.128/25"
+vpc_region_3_cidr_block      = "10.22.0.0/24"
+public_subnet_region_3_cidr  = "10.22.0.0/25"
+private_subnet_region_3_cidr = "10.22.0.128/25"
 
 enable_hcp_tgw_acceptance = false
 enable_hcp_routes         = false
@@ -25,12 +25,12 @@ hcp_provider_account_id_region_1 = null
 hcp_provider_account_id_region_2 = null
 hcp_provider_account_id_region_3 = null
 
-hvn_region_1_primary_cidr         = "172.25.16.0/20"
-hvn_region_2_primary_cidr         = "172.26.16.0/20"
-hvn_region_3_primary_cidr         = "172.27.16.0/20"
-hvn_region_2_dr_for_region_1_cidr = "172.28.16.0/20"
-hvn_region_3_dr_for_region_2_cidr = "172.29.16.0/20"
-hvn_region_1_dr_for_region_3_cidr = "172.30.16.0/20"
+hvn_region_1_primary_cidr         = "172.25.16.0/24"
+hvn_region_2_primary_cidr         = "172.26.16.0/24"
+hvn_region_3_primary_cidr         = "172.27.16.0/24"
+hvn_region_2_dr_for_region_1_cidr = "172.28.16.0/24"
+hvn_region_3_dr_for_region_2_cidr = "172.29.16.0/24"
+hvn_region_1_dr_for_region_3_cidr = "172.30.16.0/24"
 
 # -----------------------------------------------------------------------------
 # NON-PROD EXAMPLE (workspace: non-prod)
@@ -38,17 +38,17 @@ hvn_region_1_dr_for_region_3_cidr = "172.30.16.0/20"
 # -----------------------------------------------------------------------------
 # environment                  = "non-prod"
 # name_prefix                  = "vault-hcp-nonprod"
-# topology_scenario            = "dr_pair_r1_r2"
+# topology_scenario            = "non-prod"
 #
-# # Use only region 1 + region 2 VPCs in dr_pair_r1_r2 mode.
+# # Use only region 1 + region 2 VPCs in non-prod mode.
 # aws_region_1                 = "eu-west-1"
 # aws_region_2                 = "us-east-1"
-# vpc_region_1_cidr_block      = "10.20.0.0/16"
-# public_subnet_region_1_cidr  = "10.20.1.0/24"
-# private_subnet_region_1_cidr = "10.20.2.0/24"
-# vpc_region_2_cidr_block      = "10.21.0.0/16"
-# public_subnet_region_2_cidr  = "10.21.1.0/24"
-# private_subnet_region_2_cidr = "10.21.2.0/24"
+# vpc_region_1_cidr_block      = "10.20.0.0/24"
+# public_subnet_region_1_cidr  = "10.20.0.0/25"
+# private_subnet_region_1_cidr = "10.20.0.128/25"
+# vpc_region_2_cidr_block      = "10.21.0.0/24"
+# public_subnet_region_2_cidr  = "10.21.0.0/25"
+# private_subnet_region_2_cidr = "10.21.0.128/25"
 #
 # enable_hcp_tgw_acceptance = false
 # enable_hcp_routes         = true
@@ -57,5 +57,5 @@ hvn_region_1_dr_for_region_3_cidr = "172.30.16.0/20"
 # hcp_provider_account_id_region_1 = "<hcp-provider-account-id>"
 # hcp_provider_account_id_region_2 = "<hcp-provider-account-id>"
 #
-# hvn_region_1_primary_cidr         = "172.25.16.0/20"
-# hvn_region_2_dr_for_region_1_cidr = "172.28.16.0/20"
+# hvn_region_1_primary_cidr         = "172.25.16.0/24"
+# hvn_region_2_dr_for_region_1_cidr = "172.28.16.0/24"

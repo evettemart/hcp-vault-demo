@@ -1,9 +1,12 @@
 # HCP Vault Demo (AWS)
 
-This demo creates the topology shown in your diagram using two Terraform stacks:
+This demo creates the topology shown in your diagram using two Terraform stacks.
+This is a demo repository, and should be reviewed and configuration selected as per your requirements.
 
 - `terraform/aws`
 - `terraform/hcp-vault-aws/vault-cluster`
+
+This repository deploys AWS and HCP Vault resources only.
 
 The implementation is based on the structure and patterns in `vault-hcp-dedicated-migration/terraform/aws` and `vault-hcp-dedicated-migration/terraform/hcp-vault-aws`.
 
@@ -21,63 +24,23 @@ Non-prod architecture:
 
 ![HCP Vault AWS Non-Prod Architecture](docs/hcp-vault-AWS-non-prod.png)
 
-### AWS + Transit Gateway + HCP Vault (Logical)
 
-```mermaid
-flowchart LR
-	subgraph R1[eu-west-1]
-		VPC1[AWS VPC r1\n10.20.0.0/16]
-		TGW1[Transit Gateway r1]
-		HVN1[HCP HVN r1 primary\n172.25.16.0/20]
-		HVN1DR[HCP HVN r1 DR-for-r3\n172.30.16.0/20]
-		VC1[Vault cluster r1 primary]
-	end
 
-	subgraph R2[us-east-1]
-		VPC2[AWS VPC r2\n10.21.0.0/16]
-		TGW2[Transit Gateway r2]
-		HVN2[HCP HVN r2 primary\n172.26.16.0/20]
-		HVN2DR[HCP HVN r2 DR-for-r1\n172.28.16.0/20]
-		VC2[Vault cluster r2 primary]
-	end
+## AWS Region Mapping
 
-	subgraph R3[ap-southeast-1]
-		VPC3[AWS VPC r3\n10.22.0.0/16]
-		TGW3[Transit Gateway r3]
-		HVN3[HCP HVN r3 primary\n172.27.16.0/20]
-		HVN3DR[HCP HVN r3 DR-for-r2\n172.29.16.0/20]
-		VC3[Vault cluster r3 primary]
-	end
-
-	VPC1 <-- VPC attachment --> TGW1
-	VPC2 <-- VPC attachment --> TGW2
-	VPC3 <-- VPC attachment --> TGW3
-
-	TGW1 <-- HCP TGW attachment --> HVN1
-	TGW1 <-- HCP TGW attachment --> HVN1DR
-	TGW2 <-- HCP TGW attachment --> HVN2
-	TGW2 <-- HCP TGW attachment --> HVN2DR
-	TGW3 <-- HCP TGW attachment --> HVN3
-	TGW3 <-- HCP TGW attachment --> HVN3DR
-
-	HVN1 --> VC1
-	HVN2 --> VC2
-	HVN3 --> VC3
-
-	VC1 -. performance replication .-> VC2
-	VC2 -. performance replication .-> VC3
-```
-
-## Region Mapping
-
-| System | Region Group | Platform Region | HCP Region |
+| Cluster | AWS Region | HCP HVN Region | Role |
 |---|---|---|---|
-| AWS | Group 1 | eu-west-1 (Ireland) | eu-west-1 (Ireland) |
-| AWS | Group 2 | us-east-1 (N. Virginia) | us-east-1 (N. Virginia) |
-| AWS | Group 3 | ap-southeast-1 (Singapore) | ap-southeast-1 (Singapore) |
-| Azure | Group 1 | east-us | westeurope |
-| Azure | Group 2 | central-India | eastus |
-| Azure | Group 3 | west-us | southeastasia |
+| Region 1 / cluster_1 | ap-southeast-1 (Singapore) | ap-southeast-1 (Singapore) | Primary |
+| Region 2 / cluster_2 | ap-northeast-1 (Tokyo) | ap-northeast-1 (Tokyo) | DR HVN only |
+| Region 3 / cluster_3 | eu-west-1 (Ireland) | eu-west-1 (Ireland) | Secondary to cluster_1 |
+| Region 4 / cluster_4 | eu-west-2 (London) | eu-west-2 (London) | DR HVN only |
+| Region 5 / cluster_5 | us-east-1 (N. Virginia) | us-east-1 (N. Virginia) | Secondary to cluster_1 |
+| Region 6 / cluster_6 | us-east-2 (Ohio) | us-east-2 (Ohio) | DR HVN only |
+
+Environment behavior:
+
+- non-prod: deploys regions 1 and 2 only.
+- prod: deploys regions 1, 2, 3, 4, 5, and 6.
 
 ### `terraform/aws`
 
@@ -91,11 +54,13 @@ flowchart LR
 ### `terraform/hcp-vault-aws/vault-cluster`
 
 - Scenario-based deployment via `topology_scenario` with two architecture profiles:
-- `full` (prod AWS): configured across regions 1, 2, and 3 with 3 performance-replication Vault clusters and 3 DR clusters (see manual DR section below).
-- `dr_pair_r1_r2` (non-prod AWS): configured across regions 1 and 2 with 1 Vault cluster (region 1) and 1 DR path/HVN (region 2).
+- `prod`: creates Vault clusters for `cluster_1` (primary), `cluster_3` (secondary), and `cluster_5` (secondary). For `cluster_2`, `cluster_4`, and `cluster_6`, Terraform creates HVNs only; DR Vault clusters are manual.
+- `non-prod`: creates `cluster_1` as the only Terraform-managed Vault cluster. The DR secondary (`cluster_2`) is created manually in HCP.
 - Optional HVN peering controlled by `enable_hvn_peering` (default `true`)
 - When `enable_hvn_peering = true`, HCP Transit Gateway attachments are created for active HVNs in the selected scenario
 - When `enable_hvn_peering = true`, HVN routes are created from active HVNs back to matching AWS regional VPCs via Transit Gateway
+- `cluster_configs` is required and must be defined in environment tfvars.
+- `aws_region_connectivity` is required only when `enable_hvn_peering = true`.
 
 ## Folder Layout
 
@@ -146,12 +111,12 @@ Example:
 ```hcl
 # non-prod.tfvars
 project_id = "<hcp-non-prod-project-id>"
-topology_scenario = "dr_pair_r1_r2"
+topology_scenario = "non-prod"
 
 # prod.tfvars
 project_id = "<hcp-prod-project-id>"
-topology_scenario = "full"
-# Prod uses regions 1, 2, and 3.
+topology_scenario = "prod"
+# Prod uses cluster_1..cluster_6 for HVN/network mapping; Terraform creates Vault clusters for cluster_1, cluster_3, and cluster_5.
 ```
 
 ## Deployment Order
@@ -160,11 +125,18 @@ topology_scenario = "full"
 2. Create/select Terraform workspace (`non-prod` or `prod`) in both stacks.
 3. Deploy AWS network + Transit Gateways + RAM shares using workspace tfvars.
 4. Set HCP provider AWS account IDs in workspace tfvars and re-apply AWS.
-5. If `enable_hvn_peering = true`, copy AWS output values (TGW IDs, TGW share ARNs, VPC CIDRs) into `terraform/hcp-vault-aws/vault-cluster/<workspace>.tfvars`.
+5. If `enable_hvn_peering = true`, populate `aws_region_connectivity` in `terraform/hcp-vault-aws/vault-cluster/<workspace>.tfvars` from AWS outputs (TGW IDs, TGW share ARNs, VPC CIDRs).
 6. Deploy HCP Vault stack using the matching workspace tfvars (with matching HCP project ID).
 7. Accept pending Transit Gateway attachments in AWS (if not auto-accepted).
 8. Enable `enable_hcp_tgw_acceptance = true` in AWS workspace tfvars and apply AWS.
 9. Re-run plans for both stacks and confirm no changes.
+
+Workspace tfvars expectations:
+
+- `terraform/aws/non-prod.tfvars`: set `topology_scenario = "non-prod"` and keep regions 1 and 2 only.
+- `terraform/aws/prod.tfvars`: set `topology_scenario = "prod"` and set `enable_region_3..enable_region_6 = true`.
+- `terraform/hcp-vault-aws/vault-cluster/non-prod.tfvars`: use `cluster_1` and `cluster_2` with AP regions.
+- `terraform/hcp-vault-aws/vault-cluster/prod.tfvars`: use `cluster_1..cluster_6` with region mapping shown above.
 
 ## Commands
 
@@ -198,23 +170,41 @@ terraform -chdir=terraform/aws apply -var-file="$TF_ENV.tfvars"
 # hcp_provider_account_id_region_1 = "<hcp-provider-account-id>"
 # hcp_provider_account_id_region_2 = "<hcp-provider-account-id>"
 # hcp_provider_account_id_region_3 = "<hcp-provider-account-id>"
+# hcp_provider_account_id_region_4 = "<hcp-provider-account-id>"
+# hcp_provider_account_id_region_5 = "<hcp-provider-account-id>"
+# hcp_provider_account_id_region_6 = "<hcp-provider-account-id>"
 
 # 8) Re-apply AWS to create RAM principal associations
 terraform -chdir=terraform/aws apply -var-file="$TF_ENV.tfvars"
 
-# 9) If enable_hvn_peering=true, capture AWS outputs and set these values in terraform/hcp-vault-aws/vault-cluster/$TF_ENV.tfvars:
-# aws_tgw_region_1_id, aws_tgw_region_2_id, aws_tgw_region_3_id
-# aws_tgw_region_1_share_arn, aws_tgw_region_2_share_arn, aws_tgw_region_3_share_arn
-# aws_vpc_region_1_cidr_block, aws_vpc_region_2_cidr_block, aws_vpc_region_3_cidr_block
+# 9) If enable_hvn_peering=true, capture AWS outputs and populate aws_region_connectivity in
+#    terraform/hcp-vault-aws/vault-cluster/$TF_ENV.tfvars for each active cluster key.
+#    Example key structure:
+#    aws_region_connectivity = {
+#      cluster_1 = {
+#        transit_gateway_id = "<tgw-id>"
+#        resource_share_arn = "<tgw-share-arn>"
+#        destination_cidr   = "<aws-vpc-cidr>"
+#      }
+#    }
 terraform -chdir=terraform/aws output tgw_region_1_id
 terraform -chdir=terraform/aws output tgw_region_2_id
 terraform -chdir=terraform/aws output tgw_region_3_id
+terraform -chdir=terraform/aws output tgw_region_4_id
+terraform -chdir=terraform/aws output tgw_region_5_id
+terraform -chdir=terraform/aws output tgw_region_6_id
 terraform -chdir=terraform/aws output tgw_region_1_share_arn
 terraform -chdir=terraform/aws output tgw_region_2_share_arn
 terraform -chdir=terraform/aws output tgw_region_3_share_arn
+terraform -chdir=terraform/aws output tgw_region_4_share_arn
+terraform -chdir=terraform/aws output tgw_region_5_share_arn
+terraform -chdir=terraform/aws output tgw_region_6_share_arn
 terraform -chdir=terraform/aws output vpc_region_1_cidr_block
 terraform -chdir=terraform/aws output vpc_region_2_cidr_block
 terraform -chdir=terraform/aws output vpc_region_3_cidr_block
+terraform -chdir=terraform/aws output vpc_region_4_cidr_block
+terraform -chdir=terraform/aws output vpc_region_5_cidr_block
+terraform -chdir=terraform/aws output vpc_region_6_cidr_block
 
 # 10) HCP stack: init + same workspace
 terraform -chdir=terraform/hcp-vault-aws/vault-cluster init -reconfigure
@@ -245,15 +235,11 @@ Important workspace notes:
 
 ## Transit Gateway Notes
 
-- Transit Gateway is regional; this demo creates one TGW per region (`eu-west-1`, `us-east-1`, `ap-southeast-1`).
-- In `full` topology, each region typically shows 3 TGW attachments:
-	- 1 AWS VPC attachment
-	- 2 HCP-managed attachments (primary + DR HVN in that region)
-- In `dr_pair_r1_r2` non-prod topology, regions 1 and 2 typically show 2 TGW attachments each:
-	- 1 AWS VPC attachment
-	- 1 HCP-managed attachment
+- Transit Gateway is regional; create one TGW per AWS region you plan to map in `aws_region_connectivity`.
+- In `prod`, configure connectivity entries for all active cluster keys (`cluster_1`..`cluster_6`) when peering is enabled.
+- In `non-prod`, configure connectivity entries for `cluster_1` and `cluster_2` when peering is enabled.
 - If HCP apply returns `resource share doesn't exist in the cloud provider`, ensure
-	`hcp_provider_account_id_region_1/2/3` are set in `terraform/aws/<workspace>.tfvars`
+	`hcp_provider_account_id_region_1..6` are set in `terraform/aws/<workspace>.tfvars`
 	and AWS stack has been re-applied to create RAM principal associations.
 
 ## GitHub Actions (On-Demand)
@@ -294,19 +280,12 @@ How to run:
 
 ## Manual DR Cluster Setup (HCP Console)
 
-For `prod` (`topology_scenario = "full"`), after Terraform is complete, create DR clusters manually in the HCP console.
-This produces the three DR clusters expected for the prod architecture.
+DR clusters are created only after the HVN and connectivity has been completed.
+
+Edit the existing Vault cluster and create a backup network selecting the DR HVN. 
 
 Guidance:
 https://developer.hashicorp.com/vault/tutorials/get-started-hcp-vault-dedicated/manage-clusters#create-cluster-with-cross-region-dr
-
-Select the backup network (HVN) as follows:
-
-| Primary Cluster | Primary Region | Backup Network (HVN) | Backup Region |
-|---|---|---|---|
-| `vault-r1-primary` | eu-west-1 | `vault-r2-dr-for-r1-hvn` | us-east-1 |
-| `vault-r2-primary` | us-east-1 | `vault-r3-dr-for-r2-hvn` | ap-southeast-1 |
-| `vault-r3-primary` | ap-southeast-1 | `vault-r1-dr-for-r3-hvn` | eu-west-1 |
 
 ## Required Environment Variables
 

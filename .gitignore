@@ -18,6 +18,7 @@ crash.*.log
 
 # Explicitly ignore real tfvars files in any folder, but keep examples
 **/terraform.tfvars
+**/prod.tfvars
 !**/*.tfvars.example
 
 # Ignore override files

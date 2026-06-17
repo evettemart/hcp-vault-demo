@@ -29,3 +29,18 @@ provider "aws" {
   alias  = "region3"
   region = var.aws_region_3
 }
+
+provider "aws" {
+  alias  = "region4"
+  region = var.aws_region_4
+}
+
+provider "aws" {
+  alias  = "region5"
+  region = var.aws_region_5
+}
+
+provider "aws" {
+  alias  = "region6"
+  region = var.aws_region_6
+}
