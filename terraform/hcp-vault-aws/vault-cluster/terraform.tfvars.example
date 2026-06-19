@@ -20,8 +20,6 @@ cluster_configs = {
     hvn_id            = "vault-c2-hvn"
     hvn_region        = "eu-west-1"
     hvn_cidr          = "172.26.16.0/24"
-    cluster_id        = "vault-prod-c2-pr"
-    tier              = "plus_small"
     tgw_attachment_id = "c2-to-aws-tgw"
     route_id          = "c2-to-aws-vpc"
   }
@@ -38,8 +36,6 @@ cluster_configs = {
     hvn_id            = "vault-c4-hvn"
     hvn_region        = "ap-northeast-1"
     hvn_cidr          = "172.28.16.0/24"
-    cluster_id        = "vault-prod-c4-dr"
-    tier              = "plus_small"
     tgw_attachment_id = "c4-to-aws-tgw"
     route_id          = "c4-to-aws-vpc"
   }
@@ -56,8 +52,6 @@ cluster_configs = {
     hvn_id            = "vault-c6-hvn"
     hvn_region        = "us-east-2"
     hvn_cidr          = "172.30.16.0/24"
-    cluster_id        = "vault-prod-c6-dr"
-    tier              = "plus_small"
     tgw_attachment_id = "c6-to-aws-tgw"
     route_id          = "c6-to-aws-vpc"
   }
@@ -121,8 +115,6 @@ vault_ip_allowlist    = []
 #     hvn_id            = "vault-c2-hvn"
 #     hvn_region        = "ap-northeast-1"
 #     hvn_cidr          = "172.28.16.0/24"
-#     cluster_id        = "vault-nonprod-c2-dr"
-#     tier              = "plus_small"
 #     tgw_attachment_id = "c2-to-aws-tgw"
 #     route_id          = "c2-to-aws-vpc"
 #   }
