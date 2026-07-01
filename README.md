@@ -76,6 +76,13 @@ Environment behavior:
 - `terraform/hcp-vault-aws/vault-cluster/versions.tf`
 - `terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example`
 
+Namespace bootstrapping and app-team stacks are also included under `terraform/hcp-vault-aws/`:
+
+- `terraform/hcp-vault-aws/vault-bootstrap/`
+- `terraform/hcp-vault-aws/namespace1/`
+- `terraform/hcp-vault-aws/modules/`
+- `terraform/hcp-vault-aws/policies/`
+
 ## Prerequisites
 
 1. Make a copy of `.env.example` and populate your AWS values.
@@ -241,6 +248,40 @@ Important workspace notes:
 - If HCP apply returns `resource share doesn't exist in the cloud provider`, ensure
 	`hcp_provider_account_id_region_1..6` are set in `terraform/aws/<workspace>.tfvars`
 	and AWS stack has been re-applied to create RAM principal associations.
+
+## Namespace1 KV Mount Conflict Recovery
+
+When applying `terraform/hcp-vault-aws/namespace1`, you may see:
+
+- `error writing to sys/mounts/<path>: path is already in use`
+
+This means the KV mount already exists in Vault but is not managed in current Terraform state.
+
+If you prefer to recreate instead of import, use this flow:
+
+```bash
+# 1) Delete conflicting mounts in Vault (namespace: admin/namespace1)
+export VAULT_ADDR="<your-vault-addr>"
+export VAULT_TOKEN="<your-vault-token>"
+
+for p in \
+	"pcs/cloudaccount1/non-prod/kv-v2-test" \
+	"pcs/cloudaccount1/non-prod/kv-v2"; do
+	curl -sS -X DELETE \
+		-H "X-Vault-Token: $VAULT_TOKEN" \
+		-H "X-Vault-Namespace: admin/namespace1" \
+		"$VAULT_ADDR/v1/sys/mounts/$p"
+done
+
+# 2) Re-run namespace stack
+terraform -chdir=terraform/hcp-vault-aws/namespace1 plan  -var-file=non-prod.tfvars
+terraform -chdir=terraform/hcp-vault-aws/namespace1 apply -var-file=non-prod.tfvars
+```
+
+Expected result:
+
+- Terraform creates the KV mounts from `kv_engines` in `non-prod.tfvars`.
+- Future applies converge without `path is already in use` errors.
 
 ## GitHub Actions (On-Demand)
 

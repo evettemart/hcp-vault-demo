@@ -1,0 +1,44 @@
+vault_addr  = "https://vault.example.com:8200"
+vault_token = "<vault-admin-token>"
+
+namespace = "admin/namespace1"
+policy_folder = "namespace1"
+
+kv_engines = {
+  "pcs/cloudaccount1/non-prod/kv-v2-test" = {
+    mount_description    = "Namespace1 non-prod KV v2"
+    max_versions         = 20
+    cas_required         = false
+    delete_version_after = 0
+  }
+
+  "pcs/cloudaccount1/prod/kv-v2" = {
+    mount_description    = "Namespace1 prod KV v2"
+    max_versions         = 20
+    cas_required         = true
+    delete_version_after = 0
+  }
+}
+
+# Optional: SSH engines keyed by mount path.
+ssh_engines = {}
+
+# Example SSH config:
+# ssh_engines = {
+#   ssh-client-signer = {
+#     mount_description    = "Namespace1 SSH signer"
+#     generate_signing_key = true
+#     roles = {
+#       role-cs-demo = {
+#         allowed_users      = "principal-cs-demo"
+#         default_user       = "principal-cs-demo"
+#         ttl                = "4h"
+#         algorithm_signer   = "rsa-sha2-256"
+#         allowed_extensions = "permit-pty,permit-port-forwarding"
+#         default_extensions = {
+#           permit-pty = ""
+#         }
+#       }
+#     }
+#   }
+# }
