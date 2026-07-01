@@ -1,0 +1,129 @@
+vault_addr  = "https://vault.example.com:8200"
+vault_token = "<vault-admin-token>"
+
+admin_namespace         = "admin"
+create_standard_admin_policies = true
+create_child_namespaces = true
+
+child_namespaces = [
+  "namespace1",
+  "namespace2",
+  "namespace3"
+]
+
+auth_methods = {
+  oidc = {
+    type        = "oidc"
+    description = "Admin OIDC auth"
+  }
+  jwt = {
+    type        = "jwt"
+    description = "Admin JWT auth"
+  }
+}
+
+# Optional: set to true to configure OIDC backend details via modules/oidc.
+configure_oidc = false
+
+# Optional: configure one or more OIDC auth methods (preferred for multiple methods).
+# When this map is set, keys are mount paths and each method has its own config.
+# oidc_auth_methods = {
+#   oidc = {
+#     description        = "Admin OIDC auth"
+#     oidc_discovery_url = "https://login.microsoftonline.com/<tenant-id>/v2.0"
+#     oidc_client_id     = "<oidc-client-id>"
+#     oidc_client_secret = "<oidc-client-secret>"
+#     default_role       = "aad"
+#     provider_config = {
+#       provider = "azure"
+#     }
+#     roles = {
+#       aad = {
+#         user_claim            = "email"
+#         groups_claim          = "groups"
+#         allowed_redirect_uris = [
+#           "https://vault.example.com:8200/oidc/callback",
+#           "https://vault.example.com:8200/ui/vault/auth/oidc/oidc/callback",
+#           "http://localhost:8250/oidc/callback"
+#         ]
+#         bound_claims_type     = "string"
+#         bound_claims = {
+#           groups = "<azure-group-object-id>"
+#         }
+#         oidc_scopes          = ["profile"]
+#         verbose_oidc_logging = true
+#       }
+#     }
+#   }
+#
+#   oidc_alt = {
+#     description        = "Admin alternate OIDC auth"
+#     oidc_discovery_url = "https://login.microsoftonline.com/<tenant-id>/v2.0"
+#     oidc_client_id     = "<alt-oidc-client-id>"
+#     oidc_client_secret = "<alt-oidc-client-secret>"
+#     default_role       = "aad-alt"
+#   }
+# }
+#
+# oidc_discovery_url = "https://login.microsoftonline.com/<tenant-id>/v2.0"
+# oidc_client_id     = "<oidc-client-id>"
+# oidc_client_secret = "<oidc-client-secret>"
+# oidc_default_role  = "aad"
+# oidc_provider_config = {
+#   provider = "azure"
+# }
+# oidc_roles = {
+#   aad = {
+#     user_claim            = "email"
+#     groups_claim          = "groups"
+#     allowed_redirect_uris = [
+#       "https://vault.example.com:8200/oidc/callback",
+#       "https://vault.example.com:8200/ui/vault/auth/oidc/oidc/callback",
+#       "http://localhost:8250/oidc/callback"
+#     ]
+#     bound_claims_type     = "string"
+#     bound_claims = {
+#       groups = "<azure-group-object-id>"
+#     }
+#     oidc_scopes           = ["profile"]
+#     verbose_oidc_logging  = true
+#   }
+# }
+
+# Optional: manage identity groups per namespace.
+# For the admin namespace, if configure_oidc=true, the OIDC accessor is inferred
+# from the configured OIDC backend unless explicitly provided here.
+# namespace_groups = {
+#   admin = {
+#     groups = {
+#       "PPC-VAULT-ADMINS" = {
+#         group_type = "internal"
+#         policies   = ["policy-admin"]
+#       }
+#       "CS-USERS" = {
+#         group_type = "external"
+#         # Policy naming convention for secret engines:
+#         # <namespace-team>/<cloud-account>/<environment>/<name>
+#         # Example:
+#         # pcs/cloudaccount1/non-prod/kv-v2-test-consumer
+#         policies   = ["pcs/cloudaccount1/non-prod/kv-v2-test-consumer"]
+#         alias_name = "<azure-group-object-id>"
+#       }
+#     }
+#   }
+#   namespace1 = {
+#     oidc_accessor = "auth_oidc_xxxxxxxx"
+#     groups = {
+#       "NS1-DEVS" = {
+#         group_type = "external"
+#         policies   = ["pcs/cloudaccount1/non-prod/kv-v2-test-writer"]
+#         alias_name = "<namespace1-azure-group-object-id>"
+#       }
+#     }
+#   }
+# }
+
+# Baseline policies are loaded from ../policies/admin/*.hcl.
+# Optional overrides/additional policies can still be supplied via this map.
+policies = {}
+

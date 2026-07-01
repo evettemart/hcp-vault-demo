@@ -62,6 +62,14 @@ Environment behavior:
 - `cluster_configs` is required and must be defined in environment tfvars.
 - `aws_region_connectivity` is required only when `enable_hvn_peering = true`.
 
+### `terraform/hcp-vault-aws/vault-bootstrap`
+
+- Bootstraps Vault configuration inside the admin namespace after the cluster exists.
+- Creates baseline admin policies from `terraform/hcp-vault-aws/policies/admin`.
+- Enables auth methods (OIDC/JWT) and OIDC roles.
+- Creates child namespaces when enabled.
+- Creates identity groups and optional external aliases for namespace onboarding.
+
 ## Folder Layout
 
 - `terraform/aws/main.tf`
@@ -75,6 +83,97 @@ Environment behavior:
 - `terraform/hcp-vault-aws/vault-cluster/outputs.tf`
 - `terraform/hcp-vault-aws/vault-cluster/versions.tf`
 - `terraform/hcp-vault-aws/vault-cluster/terraform.tfvars.example`
+
+Namespace bootstrapping and app-team stacks are also included under `terraform/hcp-vault-aws/`:
+
+- `terraform/hcp-vault-aws/vault-bootstrap/`
+- `terraform/hcp-vault-aws/namespace1/`
+- `terraform/hcp-vault-aws/modules/`
+- `terraform/hcp-vault-aws/policies/`
+
+## Naming Conventions (Secret Engines and Policies)
+
+Use the same path convention for secret engine mount paths and Vault policy names:
+
+- `<namespace-team>/<cloud-account>/<environment>/<name>`
+
+Examples:
+
+- Secret engine mount path: `pcs/cloudaccount1/non-prod/kv-v2-test`
+- Policy name (writer): `pcs/cloudaccount1/non-prod/kv-v2-test-writer`
+- Policy name (consumer): `pcs/cloudaccount1/non-prod/kv-v2-test-consumer`
+
+For namespace policy files in `terraform/hcp-vault-aws/policies/namespace1`, nested file paths map directly to policy names.
+
+Example file to policy mapping:
+
+- `terraform/hcp-vault-aws/policies/namespace1/pcs/cloudaccount1/non-prod/kv-v2-test-writer.hcl`
+- policy name: `pcs/cloudaccount1/non-prod/kv-v2-test-writer`
+
+## Namespace Stacks and Policy Folders
+
+Each namespace should have both:
+
+- A Terraform stack folder under `terraform/hcp-vault-aws/<namespace>/`
+- A policy folder under `terraform/hcp-vault-aws/policies/<namespace>/`
+
+Example for namespace1:
+
+- Terraform stack: `terraform/hcp-vault-aws/namespace1/`
+- Policy folder: `terraform/hcp-vault-aws/policies/namespace1/`
+
+The namespace stack applies all policy files from its configured policy folder. Nested policy files are supported, and the relative file path (without `.hcl`) becomes the Vault policy name.
+
+Example:
+
+- `terraform/hcp-vault-aws/policies/namespace1/pcs/cloudaccount1/non-prod/kv-v2-test-consumer.hcl`
+- policy name: `pcs/cloudaccount1/non-prod/kv-v2-test-consumer`
+
+When creating a new namespace:
+
+1. Create `terraform/hcp-vault-aws/<namespace>/` by copying the namespace stack pattern.
+2. Create `terraform/hcp-vault-aws/policies/<namespace>/`.
+3. Add secret engines using mount paths in format `<namespace-team>/<cloud-account>/<environment>/<name>`.
+4. Add policies in nested folders so policy names follow the same format.
+
+## KV v2 Module Behavior
+
+The reusable KV module at `terraform/hcp-vault-aws/modules/kv_v2`:
+
+- mounts a KV v2 secrets engine
+- configures KV v2 options (max versions, CAS, delete window in seconds)
+- can generate per-user policies from team/member mappings
+
+Policy model for generated member policies:
+
+- `<mount>/data/<team>/<member>/*` with create/update/patch/read/delete
+- `<mount>/metadata/<team>/<member>` and `<mount>/metadata/<team>/<member>/*` with read/list
+
+Example:
+
+```hcl
+module "kv_namespace1" {
+	source = "../modules/kv_v2"
+
+	providers = {
+		vault = vault.namespace
+	}
+
+	mount_path        = "pcs/cloudaccount1/non-prod/kv-v2-test"
+	mount_description = "Namespace1 team secrets"
+
+	teams = {
+		team1 = {
+			members = ["alice", "bob"]
+		}
+		team2 = {
+			members = ["carol", "dave"]
+		}
+	}
+}
+```
+
+Use `member_policy_names` output to attach generated policies to auth roles/entities (OIDC/JWT/AppRole) for users and CI/CD identities.
 
 ## Prerequisites
 

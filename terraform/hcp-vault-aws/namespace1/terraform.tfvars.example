@@ -1,0 +1,54 @@
+vault_addr  = "https://vault.example.com:8200"
+vault_token = "<vault-admin-token>"
+
+namespace = "admin/namespace1"
+policy_folder = "namespace1"
+
+# Secret engine mount path naming convention:
+# <namespace-team>/<cloud-account>/<environment>/<name>
+# Example: pcs/cloudaccount1/non-prod/kv-v2-test
+#
+# Policy naming convention (derived from nested policy file paths):
+# <namespace-team>/<cloud-account>/<environment>/<name>
+# Example policy files:
+# policies/namespace1/pcs/cloudaccount1/non-prod/kv-v2-test-writer.hcl
+# policies/namespace1/pcs/cloudaccount1/non-prod/kv-v2-test-consumer.hcl
+
+kv_engines = {
+  "pcs/cloudaccount1/non-prod/kv-v2-test" = {
+    mount_description    = "Namespace1 non-prod KV v2"
+    max_versions         = 20
+    cas_required         = false
+    delete_version_after = 0
+  }
+
+  "pcs/cloudaccount1/prod/kv-v2" = {
+    mount_description    = "Namespace1 prod KV v2"
+    max_versions         = 20
+    cas_required         = true
+    delete_version_after = 0
+  }
+}
+
+# Optional: SSH engines keyed by mount path.
+ssh_engines = {}
+
+# Example SSH config:
+# ssh_engines = {
+#   "pcs/cloudaccount1/non-prod/ssh-signer" = {
+#     mount_description    = "Namespace1 non-prod SSH signer"
+#     generate_signing_key = true
+#     roles = {
+#       role-cs-demo = {
+#         allowed_users      = "principal-cs-demo"
+#         default_user       = "principal-cs-demo"
+#         ttl                = "4h"
+#         algorithm_signer   = "rsa-sha2-256"
+#         allowed_extensions = "permit-pty,permit-port-forwarding"
+#         default_extensions = {
+#           permit-pty = ""
+#         }
+#       }
+#     }
+#   }
+# }
