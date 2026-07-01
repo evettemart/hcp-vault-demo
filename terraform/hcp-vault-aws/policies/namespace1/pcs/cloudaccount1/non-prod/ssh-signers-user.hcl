@@ -1,6 +1,4 @@
-# Allow user certificate signing only on namespace1 SSH signer mounts.
-# No role or CA management capabilities are granted.
-
+# User signing access for namespace1 SSH signer mounts in non-prod.
 path "pcs/cloudaccount1/non-prod/ssh-signer/sign/*" {
   capabilities = ["update"]
 }

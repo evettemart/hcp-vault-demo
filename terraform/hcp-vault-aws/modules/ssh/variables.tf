@@ -1,7 +1,7 @@
 variable "mount_path" {
-  description = "Mount path for the SSH secrets engine"
+  description = "Mount path for the SSH secrets engine, following <namespace-team>/<cloud-account>/<environment>/<name>"
   type        = string
-  default     = "ssh-client-signer"
+  default     = "pcs/cloudaccount1/non-prod/ssh-signer"
 }
 
 variable "mount_description" {

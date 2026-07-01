@@ -1,6 +1,6 @@
-# RW access for namespace1 non-prod KV v2 engine.
+# Consumer access for non-prod KV engine pcs/cloudaccount1/non-prod/kv-v2-test.
 path "pcs/cloudaccount1/non-prod/kv-v2-test/data/*" {
-  capabilities = ["create", "read", "update", "patch"]
+  capabilities = ["read"]
 }
 
 path "pcs/cloudaccount1/non-prod/kv-v2-test/metadata" {

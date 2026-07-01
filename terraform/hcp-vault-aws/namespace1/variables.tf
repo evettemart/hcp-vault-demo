@@ -16,13 +16,13 @@ variable "namespace" {
 }
 
 variable "policy_folder" {
-  description = "Relative folder name under ../policies that contains HCL policy files to apply"
+  description = "Relative folder name under ../policies that contains HCL policy files to apply. Nested folders are supported and map to policy names."
   type        = string
   default     = "namespace1"
 }
 
 variable "kv_engines" {
-  description = "KV v2 engines keyed by mount path"
+  description = "KV v2 engines keyed by mount path following <namespace-team>/<cloud-account>/<environment>/<name>"
   type = map(object({
     mount_description    = optional(string, "KV v2 secrets engine")
     max_versions         = optional(number, 20)
@@ -36,7 +36,7 @@ variable "kv_engines" {
 }
 
 variable "ssh_engines" {
-  description = "SSH secrets engines keyed by mount path"
+  description = "SSH secrets engines keyed by mount path following <namespace-team>/<cloud-account>/<environment>/<name>"
   type = map(object({
     mount_description    = optional(string, "SSH client signer")
     generate_signing_key = optional(bool, true)

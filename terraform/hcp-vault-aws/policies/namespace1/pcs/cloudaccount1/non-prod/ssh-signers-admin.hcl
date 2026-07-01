@@ -1,5 +1,4 @@
-# Allow SSH signer role and CA management for namespace1 SSH signer mounts.
-
+# Admin access for namespace1 SSH signer mounts in non-prod.
 path "pcs/cloudaccount1/non-prod/ssh-signer/config/ca" {
   capabilities = ["create", "read", "update", "delete"]
 }

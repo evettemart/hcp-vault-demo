@@ -2,7 +2,11 @@ locals {
   policy_root_path = abspath("${path.module}/../policies/${var.policy_folder}")
 
   namespace_policies = {
-    for policy_file in fileset(local.policy_root_path, "*.hcl") :
+    # Nested policy paths are supported. The relative path (without .hcl)
+    # becomes the Vault policy name, for example:
+    # policies/namespace1/pcs/cloudaccount1/non-prod/kv-v2-test-writer.hcl
+    # => policy name pcs/cloudaccount1/non-prod/kv-v2-test-writer
+    for policy_file in fileset(local.policy_root_path, "**/*.hcl") :
     trimsuffix(policy_file, ".hcl") => file("${local.policy_root_path}/${policy_file}")
   }
 }

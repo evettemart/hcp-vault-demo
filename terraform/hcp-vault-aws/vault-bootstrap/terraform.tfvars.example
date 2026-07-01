@@ -102,7 +102,11 @@ configure_oidc = false
 #       }
 #       "CS-USERS" = {
 #         group_type = "external"
-#         policies   = ["policy-consumer"]
+#         # Policy naming convention for secret engines:
+#         # <namespace-team>/<cloud-account>/<environment>/<name>
+#         # Example:
+#         # pcs/cloudaccount1/non-prod/kv-v2-test-consumer
+#         policies   = ["pcs/cloudaccount1/non-prod/kv-v2-test-consumer"]
 #         alias_name = "<azure-group-object-id>"
 #       }
 #     }
@@ -112,7 +116,7 @@ configure_oidc = false
 #     groups = {
 #       "NS1-DEVS" = {
 #         group_type = "external"
-#         policies   = ["policy-producer"]
+#         policies   = ["pcs/cloudaccount1/non-prod/kv-v2-test-writer"]
 #         alias_name = "<namespace1-azure-group-object-id>"
 #       }
 #     }
