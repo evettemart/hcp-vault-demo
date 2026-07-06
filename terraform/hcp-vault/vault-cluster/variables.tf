@@ -109,8 +109,8 @@ locals {
       non-prod = toset(["cluster_1"])
     }
     azure = {
-      prod     = toset(["cluster_1", "cluster_2", "cluster_3", "cluster_4", "cluster_5", "cluster_6"])
-      non-prod = toset(["cluster_1", "cluster_2"])
+      prod     = toset(["cluster_1", "cluster_3", "cluster_5"])
+      non-prod = toset(["cluster_1"])
     }
   }
 

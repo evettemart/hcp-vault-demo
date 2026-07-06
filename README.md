@@ -1,4 +1,4 @@
-# HCP Vault Demo (AWS)
+# HCP Vault Demo (AWS + Azure)
 
 This demo creates the topology shown in your diagram using two Terraform stacks.
 This is a demo repository, and should be reviewed and configuration selected as per your requirements.
@@ -6,7 +6,7 @@ This is a demo repository, and should be reviewed and configuration selected as 
 - `terraform/aws`
 - `terraform/hcp-vault/vault-cluster`
 
-This repository deploys AWS and HCP Vault resources only.
+This repository deploys HCP Vault resources and supports AWS and Azure connectivity patterns.
 
 The implementation is based on the structure and patterns in `vault-hcp-dedicated-migration/terraform/aws` and `vault-hcp-dedicated-migration/terraform/hcp-vault-aws`.
 
@@ -70,8 +70,15 @@ Environment behavior:
 - Optional HVN peering controlled by `enable_hvn_peering` (default `true`)
 - When `enable_hvn_peering = true`, HCP Transit Gateway attachments are created for active HVNs in the selected scenario
 - When `enable_hvn_peering = true`, HVN routes are created from active HVNs back to matching AWS regional VPCs via Transit Gateway
+- When `enable_hvn_peering = true` and `cloud_provider = "azure"`, HCP Azure peering connections are created for active HVNs
+- When `enable_hvn_peering = true` and `cloud_provider = "azure"`, HVN routes are created from active HVNs to the configured Azure destination CIDRs
 - `cluster_configs` is required and must be defined in environment tfvars.
 - `aws_region_connectivity` is required only when `enable_hvn_peering = true`.
+- `azure_region_connectivity` is required only when `enable_hvn_peering = true` and `cloud_provider = "azure"`.
+
+Azure scope note:
+
+- this Terraform creates HCP-side peering and HVN routes. It does not build Azure-side NVA route tables/UDRs/NVA config; those must already exist or be managed separately.
 
 ### `terraform/hcp-vault/vault-bootstrap`
 
@@ -241,6 +248,22 @@ topology_scenario = "prod"
 8. Enable `enable_hcp_tgw_acceptance = true` in AWS workspace tfvars and apply AWS.
 9. Re-run plans for both stacks and confirm no changes.
 
+### Azure Deployment Order (HCP Vault + HVN Peering)
+
+1. Create/select a dedicated Azure workspace in `terraform/hcp-vault/vault-cluster` (for example `prod-azure`).
+2. Use an Azure-specific tfvars file such as `terraform/hcp-vault/vault-cluster/prod-azure.tfvars` with:
+	- `cloud_provider = "azure"`
+	- `project_id` for the Azure HCP project
+	- `cluster_configs` for cluster_1..cluster_6 HVNs (Terraform-managed Vault clusters are cluster_1, cluster_3, and cluster_5 in prod)
+3. Set `enable_hvn_peering = true` in the Azure tfvars file when you want HCP Azure peering and HVN routes created.
+4. Populate `azure_region_connectivity` for each active cluster key with VNet identity values and the destination CIDR routed via your Azure NVA path.
+5. Run plan/apply in the dedicated Azure workspace using the Azure tfvars file.
+6. Confirm peering status is active and re-run plan for convergence.
+
+Azure scope note:
+
+- this Terraform creates HCP-side peering and HVN routes. It does not build Azure-side NVA route tables/UDRs/NVA config; those must already exist or be managed separately.
+
 Workspace tfvars expectations:
 
 - `terraform/aws/non-prod.tfvars`: set `topology_scenario = "non-prod"` and keep regions 1 and 2 only.
@@ -337,10 +360,35 @@ terraform -chdir=terraform/aws plan -var-file="$TF_ENV.tfvars"
 terraform -chdir=terraform/hcp-vault/vault-cluster plan -var-file="$TF_ENV.tfvars"
 ```
 
+Azure-specific commands (dedicated workspace):
+
+```bash
+# 1) Load environment variables (HCP credentials for Azure project)
+source .env
+
+# 2) Choose Azure workspace and var file
+export TF_AZURE_ENV=prod-azure
+export TF_AZURE_VARS=prod-azure.tfvars
+
+# 3) HCP stack: init + dedicated Azure workspace
+terraform -chdir=terraform/hcp-vault/vault-cluster init -reconfigure
+terraform -chdir=terraform/hcp-vault/vault-cluster workspace new "$TF_AZURE_ENV" || terraform -chdir=terraform/hcp-vault/vault-cluster workspace select "$TF_AZURE_ENV"
+terraform -chdir=terraform/hcp-vault/vault-cluster workspace show
+
+# 4) Plan/apply using Azure var file
+terraform -chdir=terraform/hcp-vault/vault-cluster plan  -var-file="$TF_AZURE_VARS"
+terraform -chdir=terraform/hcp-vault/vault-cluster apply -var-file="$TF_AZURE_VARS"
+
+# 5) Convergence check
+terraform -chdir=terraform/hcp-vault/vault-cluster plan -var-file="$TF_AZURE_VARS"
+```
+
 Important workspace notes:
 
 - Do not use the `default` workspace for environment deployments.
 - Use the same workspace name in both stacks (`non-prod` with `non-prod`, `prod` with `prod`).
+- For Azure deployments, use a separate HCP workspace (for example `prod-azure`) in `terraform/hcp-vault/vault-cluster`.
+- Recommended Azure workspace names: `non-prod-azure` for non-production and `prod-azure` for production.
 - Backends are configured with workspace-isolated S3 paths via `workspace_key_prefix`.
 
 ## Transit Gateway Notes
