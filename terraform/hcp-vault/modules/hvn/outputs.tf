@@ -9,6 +9,6 @@ output "self_link" {
 }
 
 output "provider_account_id" {
-  description = "HCP-managed AWS provider account ID for this HVN"
+  description = "HCP-managed cloud provider account ID for this HVN"
   value       = hcp_hvn.this.provider_account_id
 }
