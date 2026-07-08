@@ -1,6 +1,7 @@
 variable "namespace" {
-  description = "Vault namespace where groups are managed"
+  description = "Vault namespace where groups are managed. Set to null to use the provider namespace as-is."
   type        = string
+  nullable    = true
 }
 
 variable "oidc_accessor" {
