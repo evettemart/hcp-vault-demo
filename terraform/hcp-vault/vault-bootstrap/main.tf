@@ -92,7 +92,11 @@ module "identity_groups" {
   source   = "../modules/identity_groups"
   for_each = var.namespace_groups
 
-  namespace     = each.key
+  providers = {
+    vault = vault.admin
+  }
+
+  namespace     = each.key == var.admin_namespace ? null : each.key
   oidc_accessor = lookup(local.namespace_oidc_accessors, each.key, null)
   groups        = each.value.groups
 

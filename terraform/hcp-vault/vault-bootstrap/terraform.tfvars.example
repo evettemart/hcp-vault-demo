@@ -93,6 +93,8 @@ configure_oidc = false
 # Optional: manage identity groups per namespace.
 # For the admin namespace, if configure_oidc=true, the OIDC accessor is inferred
 # from the configured OIDC backend unless explicitly provided here.
+# Keys should be: `admin` for admin namespace groups, and child names like
+# `namespace1` for admin/namespace1. Do not prefix child keys with `admin/`.
 # namespace_groups = {
 #   admin = {
 #     groups = {

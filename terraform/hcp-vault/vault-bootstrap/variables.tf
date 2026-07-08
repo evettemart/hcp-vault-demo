@@ -157,7 +157,7 @@ variable "oidc_roles" {
 }
 
 variable "namespace_groups" {
-  description = "Namespace-specific identity group configuration keyed by namespace path"
+  description = "Namespace-specific identity group configuration keyed by namespace. Use the admin_namespace key (for example, admin) for admin groups, and child namespace keys (for example, namespace1) for namespaces under admin."
   type = map(object({
     oidc_accessor = optional(string)
     groups = map(object({

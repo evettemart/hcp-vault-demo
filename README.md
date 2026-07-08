@@ -88,6 +88,29 @@ Azure scope note:
 - Creates child namespaces when enabled.
 - Creates identity groups and optional external aliases for namespace onboarding.
 
+Identity group ownership and namespace mapping:
+
+- Identity groups are managed by `terraform/hcp-vault/vault-bootstrap` via `namespace_groups`.
+- Use `admin` as the key for groups in the admin namespace.
+- Use child namespace keys like `namespace1` (not `admin/namespace1`) for groups in `admin/<child>` namespaces.
+- The namespace stack under `terraform/hcp-vault/namespace1` currently manages policies and secret engines, not identity groups.
+
+Internal vs external group behavior:
+
+- `group_type = "internal"`: Vault-managed membership; no AD/IdP connectivity needed.
+- `group_type = "external"`: Vault group alias mapping to IdP group (`alias_name`) using `oidc_accessor`.
+- External alias creation does not require live AD login, but it does require a valid OIDC mount accessor in Vault.
+
+Testing without AD connectivity:
+
+1. Add at least one internal group under `namespace_groups.admin` and (optionally) one under `namespace_groups.namespace1`.
+2. Run `terraform -chdir=terraform/hcp-vault/vault-bootstrap plan -var-file=non-prod.tfvars`.
+3. Run `terraform -chdir=terraform/hcp-vault/vault-bootstrap apply -var-file=non-prod.tfvars`.
+4. Validate resources in state with:
+	- `module.identity_groups["admin"].vault_identity_group.this["<group-name>"]`
+	- `module.identity_groups["namespace1"].vault_identity_group.this["<group-name>"]`
+5. For external alias testing, uncomment an external group, set `oidc_accessor`, and re-run plan/apply.
+
 ## Folder Layout
 
 - `terraform/aws/main.tf`
