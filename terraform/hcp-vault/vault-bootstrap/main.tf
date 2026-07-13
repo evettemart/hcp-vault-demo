@@ -15,11 +15,28 @@ locals {
     } : {}
   )
   configure_oidc_effective = length(local.oidc_auth_methods_effective) > 0
+  configure_aws_auth_effective   = length(var.aws_auth_methods) > 0
+  configure_azure_auth_effective = length(var.azure_auth_methods) > 0
+  configure_gcp_auth_effective   = length(var.gcp_auth_methods) > 0
+  configure_approle_auth_effective = length(var.approle_auth_methods) > 0
+
+  disabled_auth_types = toset(concat(
+    local.configure_oidc_effective ? ["oidc"] : [],
+    local.configure_aws_auth_effective ? ["aws"] : [],
+    local.configure_azure_auth_effective ? ["azure"] : [],
+    local.configure_gcp_auth_effective ? ["gcp"] : [],
+    local.configure_approle_auth_effective ? ["approle"] : []
+  ))
+
   auth_methods_effective = local.configure_oidc_effective ? {
     for mount_path, config in var.auth_methods :
     mount_path => config
-    if lower(config.type) != "oidc"
-  } : var.auth_methods
+    if !contains(local.disabled_auth_types, lower(config.type))
+  } : {
+    for mount_path, config in var.auth_methods :
+    mount_path => config
+    if !contains(local.disabled_auth_types, lower(config.type))
+  }
 
   # Read policy definitions from ../policies/<admin-namespace>/*.hcl (aligned with
   # hashicorp-validated-designs/terraform-vault-policies pattern).
@@ -33,16 +50,20 @@ locals {
     var.policies
   )
 
-  admin_default_oidc_accessor = contains(keys(module.oidc_admin), "oidc") ? module.oidc_admin["oidc"].accessor : null
-
-  namespace_oidc_accessors = merge(
-    local.admin_default_oidc_accessor != null ? { (var.admin_namespace) = local.admin_default_oidc_accessor } : {},
-    {
-      for namespace_name, namespace_config in var.namespace_groups :
-      namespace_name => namespace_config.oidc_accessor
-      if try(namespace_config.oidc_accessor, null) != null && trimspace(try(namespace_config.oidc_accessor, "")) != ""
-    }
+  admin_default_oidc_accessor = length(module.oidc_admin) == 1 ? one([
+    for mount_path, mod in module.oidc_admin : mod.accessor
+  ]) : (
+    contains(keys(module.oidc_admin), "oidc") ? module.oidc_admin["oidc"].accessor : null
   )
+
+  namespace_oidc_accessors = {
+    for namespace_name, namespace_config in var.namespace_groups :
+    namespace_name => (
+      try(namespace_config.oidc_accessor, null) != null && trimspace(try(namespace_config.oidc_accessor, "")) != ""
+      ? namespace_config.oidc_accessor
+      : local.admin_default_oidc_accessor
+    )
+  }
 }
 
 module "oidc_admin" {
@@ -61,6 +82,74 @@ module "oidc_admin" {
   default_role       = try(each.value.default_role, null)
   provider_config    = try(each.value.provider_config, {})
   roles              = try(each.value.roles, {})
+}
+
+module "aws_auth_admin" {
+  source   = "../modules/aws_auth"
+  for_each = var.aws_auth_methods
+
+  providers = {
+    vault = vault.admin
+  }
+
+  path                 = each.key
+  description          = try(each.value.description, "AWS auth backend")
+  config_endpoint      = try(each.value.config_endpoint, "config/client")
+  config               = try(each.value.config, {})
+  roles                = try(each.value.roles, {})
+  disable_delete       = try(each.value.disable_delete, false)
+  ignore_absent_fields = try(each.value.ignore_absent_fields, true)
+}
+
+module "azure_auth_admin" {
+  source   = "../modules/azure_auth"
+  for_each = var.azure_auth_methods
+
+  providers = {
+    vault = vault.admin
+  }
+
+  path                 = each.key
+  description          = try(each.value.description, "Azure auth backend")
+  config_endpoint      = try(each.value.config_endpoint, "config")
+  config               = try(each.value.config, {})
+  roles                = try(each.value.roles, {})
+  disable_delete       = try(each.value.disable_delete, false)
+  ignore_absent_fields = try(each.value.ignore_absent_fields, true)
+}
+
+module "gcp_auth_admin" {
+  source   = "../modules/gcp_auth"
+  for_each = var.gcp_auth_methods
+
+  providers = {
+    vault = vault.admin
+  }
+
+  path                 = each.key
+  description          = try(each.value.description, "GCP auth backend")
+  config_endpoint      = try(each.value.config_endpoint, "config")
+  config               = try(each.value.config, {})
+  roles                = try(each.value.roles, {})
+  disable_delete       = try(each.value.disable_delete, false)
+  ignore_absent_fields = try(each.value.ignore_absent_fields, true)
+}
+
+module "approle_auth_admin" {
+  source   = "../modules/approle_auth"
+  for_each = var.approle_auth_methods
+
+  providers = {
+    vault = vault.admin
+  }
+
+  path                 = each.key
+  description          = try(each.value.description, "AppRole auth backend")
+  config_endpoint      = try(each.value.config_endpoint, "config")
+  config               = try(each.value.config, {})
+  roles                = try(each.value.roles, {})
+  disable_delete       = try(each.value.disable_delete, false)
+  ignore_absent_fields = try(each.value.ignore_absent_fields, true)
 }
 
 resource "vault_namespace" "admin_children" {

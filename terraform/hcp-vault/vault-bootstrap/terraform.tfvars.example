@@ -90,6 +90,86 @@ configure_oidc = false
 #   }
 # }
 
+# Optional: configure AWS auth backend(s) keyed by mount path.
+# aws_auth_methods = {
+#   aws = {
+#     description     = "Admin AWS auth"
+#     config_endpoint = "config/client"
+#     config = {
+#       access_key = "<aws-access-key-id>"
+#       secret_key = "<aws-secret-access-key>"
+#       region     = "us-east-1"
+#     }
+#     roles = {
+#       aws-admin = {
+#         auth_type      = "iam"
+#         bound_iam_principal_arn = "arn:aws:iam::<account-id>:role/<role-name>"
+#         token_policies = "policy-admin"
+#         token_ttl      = 3600
+#       }
+#     }
+#   }
+# }
+
+# Optional: configure Azure auth backend(s) keyed by mount path.
+# azure_auth_methods = {
+#   azure = {
+#     description     = "Admin Azure auth"
+#     config_endpoint = "config"
+#     config = {
+#       tenant_id       = "<azure-tenant-id>"
+#       resource        = "https://management.azure.com/"
+#       client_id       = "<azure-client-id>"
+#       client_secret   = "<azure-client-secret>"
+#     }
+#     roles = {
+#       azure-admin = {
+#         bound_subscription_ids = ["<subscription-id>"]
+#         bound_resource_groups  = ["<resource-group>"]
+#         token_policies         = ["policy-admin"]
+#         ttl                    = 3600
+#       }
+#     }
+#   }
+# }
+
+# Optional: configure GCP auth backend(s) keyed by mount path.
+# gcp_auth_methods = {
+#     description     = "Admin GCP auth"
+#     config_endpoint = "config"
+#     config = {
+#       credentials = "<gcp-credentials-json>"
+#     }
+#     roles = {
+#       gcp-admin = {
+#         type                  = "iam"
+#         bound_service_accounts = ["sa-name@project-id.iam.gserviceaccount.com"]
+#         token_policies        = ["policy-admin"]
+#         ttl                   = 3600
+#       }
+#     }
+#   }
+# }
+
+# Optional: configure AppRole auth backend(s) keyed by mount path.
+# approle_auth_methods = {
+#   approle = {
+#     description     = "Admin AppRole auth"
+#     config_endpoint = "config"
+#     config = {
+#       bind_secret_id = true
+#     }
+#     roles = {
+#       app-ci = {
+#         token_policies = ["policy-admin"]
+#         token_ttl      = "1h"
+#         token_max_ttl  = "4h"
+#         bind_secret_id = true
+#       }
+#     }
+#   }
+# }
+
 # Optional: manage identity groups per namespace.
 # For the admin namespace, if configure_oidc=true, the OIDC accessor is inferred
 # from the configured OIDC backend unless explicitly provided here.
@@ -114,6 +194,9 @@ configure_oidc = false
 #     }
 #   }
 #   namespace1 = {
+#     # Optional override. If omitted, namespace groups use the inferred admin
+#     # OIDC accessor when exactly one OIDC method is configured (or key `oidc`
+#     # exists in oidc_auth_methods).
 #     oidc_accessor = "auth_oidc_xxxxxxxx"
 #     groups = {
 #       "NS1-DEVS" = {

@@ -156,6 +156,58 @@ variable "oidc_roles" {
   default = {}
 }
 
+variable "aws_auth_methods" {
+  description = "AWS auth backends keyed by mount path to configure in the admin namespace"
+  type = map(object({
+    description          = optional(string, "AWS auth backend")
+    config_endpoint      = optional(string, "config/client")
+    config               = optional(map(any), {})
+    roles                = optional(map(map(any)), {})
+    disable_delete       = optional(bool, false)
+    ignore_absent_fields = optional(bool, true)
+  }))
+  default = {}
+}
+
+variable "azure_auth_methods" {
+  description = "Azure auth backends keyed by mount path to configure in the admin namespace"
+  type = map(object({
+    description          = optional(string, "Azure auth backend")
+    config_endpoint      = optional(string, "config")
+    config               = optional(map(any), {})
+    roles                = optional(map(map(any)), {})
+    disable_delete       = optional(bool, false)
+    ignore_absent_fields = optional(bool, true)
+  }))
+  default = {}
+}
+
+variable "gcp_auth_methods" {
+  description = "GCP auth backends keyed by mount path to configure in the admin namespace"
+  type = map(object({
+    description          = optional(string, "GCP auth backend")
+    config_endpoint      = optional(string, "config")
+    config               = optional(map(any), {})
+    roles                = optional(map(map(any)), {})
+    disable_delete       = optional(bool, false)
+    ignore_absent_fields = optional(bool, true)
+  }))
+  default = {}
+}
+
+variable "approle_auth_methods" {
+  description = "AppRole auth backends keyed by mount path to configure in the admin namespace"
+  type = map(object({
+    description          = optional(string, "AppRole auth backend")
+    config_endpoint      = optional(string, "config")
+    config               = optional(map(any), {})
+    roles                = optional(map(map(any)), {})
+    disable_delete       = optional(bool, false)
+    ignore_absent_fields = optional(bool, true)
+  }))
+  default = {}
+}
+
 variable "namespace_groups" {
   description = "Namespace-specific identity group configuration keyed by namespace. Use the admin_namespace key (for example, admin) for admin groups, and child namespace keys (for example, namespace1) for namespaces under admin."
   type = map(object({
