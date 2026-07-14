@@ -52,3 +52,189 @@ ssh_engines = {}
 #     }
 #   }
 # }
+
+# Optional: AWS secrets engines keyed by mount path.
+aws_secret_engines = {}
+
+# Example AWS secrets config:
+# aws_secret_engines = {
+#   "pcs/cloudaccount1/non-prod/aws-secrets-test" = {
+#     mount_description = "Namespace1 non-prod AWS secrets test"
+#     config_root = {
+#       region = "us-east-1"
+#     }
+#     roles = {
+#       "app-iam-user" = {
+#         credential_type      = "iam_user"
+#         policy_document_file = "pcs/cloudaccount1/non-prod/aws-secrets-test-readonly.json"
+#       }
+#
+#       "app-assumed-role" = {
+#         credential_type = "assumed_role"
+#         role_arns = [
+#           "arn:aws:iam::123456789012:role/app-nonprod-readonly"
+#         ]
+#       }
+#     }
+#   }
+# }
+
+# Optional: Database secrets engines keyed by mount path.
+database_secret_engines = {}
+
+# Example Database secrets config:
+# database_secret_engines = {
+#   "pcs/cloudaccount1/non-prod/database-postgres" = {
+#     mount_description = "Namespace1 non-prod Postgres secrets engine"
+#
+#     connections = {
+#       "postgres-app" = {
+#         plugin_name    = "postgresql-database-plugin"
+#         allowed_roles  = ["postgres-app-readonly"]
+#         connection_url = "postgresql://{{username}}:{{password}}@postgres-app.example.internal:5432/appdb?sslmode=disable"
+#         username       = "vaultadmin"
+#         password       = "replace-me"
+#       }
+#
+#       "postgres-analytics" = {
+#         plugin_name    = "postgresql-database-plugin"
+#         allowed_roles  = ["postgres-analytics-readonly"]
+#         connection_url = "postgresql://{{username}}:{{password}}@postgres-analytics.example.internal:5432/analytics?sslmode=disable"
+#         username       = "vaultadmin"
+#         password       = "replace-me"
+#       }
+#     }
+#
+#     roles = {
+#       "postgres-app-readonly" = {
+#         db_name = "postgres-app"
+#         creation_statements = [
+#           "CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';",
+#           "GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";"
+#         ]
+#         revocation_statements = [
+#           "REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM \"{{name}}\";",
+#           "DROP ROLE IF EXISTS \"{{name}}\";"
+#         ]
+#         default_ttl = "1h"
+#         max_ttl     = "24h"
+#       }
+#
+#       "postgres-analytics-readonly" = {
+#         db_name = "postgres-analytics"
+#         creation_statements = [
+#           "CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';",
+#           "GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";"
+#         ]
+#         revocation_statements = [
+#           "REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM \"{{name}}\";",
+#           "DROP ROLE IF EXISTS \"{{name}}\";"
+#         ]
+#         default_ttl = "1h"
+#         max_ttl     = "24h"
+#       }
+#     }
+#   }
+#
+#   "pcs/cloudaccount1/non-prod/database-mysql" = {
+#     mount_description = "Namespace1 non-prod MySQL secrets engine"
+#
+#     connections = {
+#       "mysql-app" = {
+#         plugin_name    = "mysql-database-plugin"
+#         allowed_roles  = ["mysql-app-readonly"]
+#         connection_url = "{{username}}:{{password}}@tcp(mysql-app.example.internal:3306)/"
+#         username       = "vaultadmin"
+#         password       = "replace-me"
+#       }
+#
+#       "mysql-reporting" = {
+#         plugin_name    = "mysql-database-plugin"
+#         allowed_roles  = ["mysql-reporting-readonly"]
+#         connection_url = "{{username}}:{{password}}@tcp(mysql-reporting.example.internal:3306)/"
+#         username       = "vaultadmin"
+#         password       = "replace-me"
+#       }
+#     }
+#
+#     roles = {
+#       "mysql-app-readonly" = {
+#         db_name = "mysql-app"
+#         creation_statements = [
+#           "CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';",
+#           "GRANT SELECT ON *.* TO '{{name}}'@'%';"
+#         ]
+#         revocation_statements = [
+#           "REVOKE ALL PRIVILEGES, GRANT OPTION FROM '{{name}}'@'%';",
+#           "DROP USER IF EXISTS '{{name}}'@'%';"
+#         ]
+#         default_ttl = "1h"
+#         max_ttl     = "24h"
+#       }
+#
+#       "mysql-reporting-readonly" = {
+#         db_name = "mysql-reporting"
+#         creation_statements = [
+#           "CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';",
+#           "GRANT SELECT ON *.* TO '{{name}}'@'%';"
+#         ]
+#         revocation_statements = [
+#           "REVOKE ALL PRIVILEGES, GRANT OPTION FROM '{{name}}'@'%';",
+#           "DROP USER IF EXISTS '{{name}}'@'%';"
+#         ]
+#         default_ttl = "1h"
+#         max_ttl     = "24h"
+#       }
+#     }
+#   }
+# }
+
+# Optional: LDAP secrets engines keyed by mount path.
+ldap_secret_engines = {}
+
+# Example LDAP secrets config:
+# ldap_secret_engines = {
+#   "pcs/cloudaccount1/non-prod/ldap-test" = {
+#     mount_description = "Namespace1 non-prod LDAP secrets test"
+#     config = {
+#       url          = "ldaps://ldap.example.internal"
+#       binddn       = "cn=vault,ou=svc,dc=example,dc=internal"
+#       bindpass     = "replace-me"
+#       userdn       = "ou=users,dc=example,dc=internal"
+#       userattr     = "cn"
+#       schema       = "openldap"
+#       insecure_tls = true
+#       certificate  = ""
+#     }
+#     roles = {
+#       "app-user" = {
+#         username = "app-service"
+#         dn       = "cn=app-service,ou=users,dc=example,dc=internal"
+#       }
+#     }
+#   }
+# }
+
+# Optional: Kubernetes secrets engines keyed by mount path.
+kubernetes_secret_engines = {}
+
+# Example Kubernetes secrets config:
+# kubernetes_secret_engines = {
+#   "pcs/cloudaccount1/non-prod/kubernetes-test" = {
+#     mount_description = "Namespace1 non-prod Kubernetes secrets test"
+#     config = {
+#       kubernetes_host      = "https://kubernetes.default.svc"
+#       kubernetes_ca_cert   = ""
+#       service_account_jwt  = ""
+#       disable_local_ca_jwt = true
+#     }
+#     roles = {
+#       "app-reader" = {
+#         allowed_kubernetes_namespaces = ["default", "apps"]
+#         generated_role_rules          = "rules:\n- apiGroups: ['']\n  resources: ['pods']\n  verbs: ['get','list']"
+#         token_default_ttl             = 3600
+#         token_max_ttl                 = 14400
+#       }
+#     }
+#   }
+# }
