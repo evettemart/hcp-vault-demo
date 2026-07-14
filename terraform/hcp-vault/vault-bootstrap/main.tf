@@ -14,10 +14,10 @@ locals {
       }
     } : {}
   )
-  configure_oidc_effective = length(local.oidc_auth_methods_effective) > 0
-  configure_aws_auth_effective   = length(var.aws_auth_methods) > 0
-  configure_azure_auth_effective = length(var.azure_auth_methods) > 0
-  configure_gcp_auth_effective   = length(var.gcp_auth_methods) > 0
+  configure_oidc_effective         = length(local.oidc_auth_methods_effective) > 0
+  configure_aws_auth_effective     = length(var.aws_auth_methods) > 0
+  configure_azure_auth_effective   = length(var.azure_auth_methods) > 0
+  configure_gcp_auth_effective     = length(var.gcp_auth_methods) > 0
   configure_approle_auth_effective = length(var.approle_auth_methods) > 0
 
   disabled_auth_types = toset(concat(
@@ -32,7 +32,7 @@ locals {
     for mount_path, config in var.auth_methods :
     mount_path => config
     if !contains(local.disabled_auth_types, lower(config.type))
-  } : {
+    } : {
     for mount_path, config in var.auth_methods :
     mount_path => config
     if !contains(local.disabled_auth_types, lower(config.type))
@@ -52,7 +52,7 @@ locals {
 
   admin_default_oidc_accessor = length(module.oidc_admin) == 1 ? one([
     for mount_path, mod in module.oidc_admin : mod.accessor
-  ]) : (
+    ]) : (
     contains(keys(module.oidc_admin), "oidc") ? module.oidc_admin["oidc"].accessor : null
   )
 
@@ -67,7 +67,7 @@ locals {
 }
 
 module "oidc_admin" {
-  source = "../modules/oidc"
+  source   = "../modules/oidc"
   for_each = local.oidc_auth_methods_effective
 
   providers = {

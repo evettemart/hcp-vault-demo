@@ -11,12 +11,51 @@ module "region_1_network" {
 }
 
 locals {
-  full_topology = var.topology_scenario == "prod"
-  tags          = merge(var.tags, { Environment = var.environment })
+  full_topology   = var.topology_scenario == "prod"
+  tags            = merge(var.tags, { Environment = var.environment })
   enable_region_3 = local.full_topology && var.enable_region_3
   enable_region_4 = local.full_topology && var.enable_region_4
   enable_region_5 = local.full_topology && var.enable_region_5
   enable_region_6 = local.full_topology && var.enable_region_6
+  test_database_allowed_cidrs_region_1 = length(var.test_database_allowed_cidrs) > 0 ? var.test_database_allowed_cidrs : compact([
+    module.region_1_network.vpc_cidr_block,
+    var.hvn_region_1_primary_cidr,
+    var.hvn_region_2_dr_for_region_1_cidr
+  ])
+}
+
+module "test_postgres_region_1" {
+  count  = var.enable_test_databases ? 1 : 0
+  source = "./modules/rds_postgresql"
+
+  name_prefix    = var.name_prefix
+  region_short   = "r1"
+  region_group   = "region-1"
+  vpc_id         = module.region_1_network.vpc_id
+  subnet_ids     = [module.region_1_network.public_subnet_id, module.region_1_network.private_subnet_id]
+  allowed_cidrs  = local.test_database_allowed_cidrs_region_1
+  instance_class = var.test_database_instance_type
+  db_name        = var.test_postgres_database
+  username       = var.test_postgres_username
+  password       = var.test_postgres_password
+  tags           = local.tags
+}
+
+module "test_mysql_region_1" {
+  count  = var.enable_test_databases ? 1 : 0
+  source = "./modules/rds_mysql"
+
+  name_prefix    = var.name_prefix
+  region_short   = "r1"
+  region_group   = "region-1"
+  vpc_id         = module.region_1_network.vpc_id
+  subnet_ids     = [module.region_1_network.public_subnet_id, module.region_1_network.private_subnet_id]
+  allowed_cidrs  = local.test_database_allowed_cidrs_region_1
+  instance_class = var.test_database_instance_type
+  db_name        = var.test_mysql_database
+  username       = var.test_mysql_username
+  password       = var.test_mysql_password
+  tags           = local.tags
 }
 
 module "region_2_network" {

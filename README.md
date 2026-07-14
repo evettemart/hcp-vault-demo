@@ -61,6 +61,7 @@ Environment behavior:
 - RAM shares for each regional Transit Gateway
 - Optional acceptance of HCP Transit Gateway attachment requests
 - Routes from AWS route tables to all HVN CIDRs via Transit Gateway
+- Optional Region 1 EC2-based Postgres and MySQL test database hosts for Vault database secret engine validation
 
 ### `terraform/hcp-vault/vault-cluster`
 
@@ -84,9 +85,23 @@ Azure scope note:
 
 - Bootstraps Vault configuration inside the admin namespace after the cluster exists.
 - Creates baseline admin policies from `terraform/hcp-vault/policies/admin`.
-- Enables auth methods (OIDC/JWT) and OIDC roles.
+- Enables and configures auth methods in the admin namespace.
 - Creates child namespaces when enabled.
 - Creates identity groups and optional external aliases for namespace onboarding.
+
+Supported auth methods (admin namespace):
+
+- Generic auth enables via `auth_methods`: `oidc`, `jwt`
+- OIDC auth backend configuration via `oidc_auth_methods` (or legacy single-backend inputs)
+- AWS auth backend configuration via `aws_auth_methods`
+- Azure auth backend configuration via `azure_auth_methods`
+- GCP auth backend configuration via `gcp_auth_methods`
+- AppRole auth backend configuration via `approle_auth_methods`
+
+Supported secret engines:
+
+- Namespace stack reusable modules: KV v2 (`terraform/hcp-vault/modules/kv_v2`), SSH (`terraform/hcp-vault/modules/ssh`)
+- Namespace stack engine maps (in `terraform/hcp-vault/namespace1/non-prod.tfvars`): AWS (`aws_secret_engines`), Database (`database_secret_engines`), LDAP (`ldap_secret_engines`), Kubernetes (`kubernetes_secret_engines`)
 
 Identity group ownership and namespace mapping:
 
@@ -94,6 +109,94 @@ Identity group ownership and namespace mapping:
 - Use `admin` as the key for groups in the admin namespace.
 - Use child namespace keys like `namespace1` (not `admin/namespace1`) for groups in `admin/<child>` namespaces.
 - The namespace stack under `terraform/hcp-vault/namespace1` currently manages policies and secret engines, not identity groups.
+
+### `terraform/hcp-vault/namespace1` AWS secrets examples
+
+The namespace1 non-prod example includes both AWS credential patterns:
+
+- `iam_user` role example (`app-iam-user`):
+	- `credential_type = "iam_user"`
+	- `policy_document_file = "pcs/cloudaccount1/non-prod/aws-secrets-test-readonly.json"`
+	- Vault creates IAM user credentials according to the supplied IAM policy document.
+- `assumed_role` role example (`app-assumed-role`):
+	- `credential_type = "assumed_role"`
+	- `role_arns = ["arn:aws:iam::123456789012:role/app-nonprod-readonly"]`
+	- Vault returns short-lived STS credentials by assuming the target IAM role.
+
+Files:
+
+- role examples: `terraform/hcp-vault/namespace1/non-prod.tfvars`
+- IAM policy document file for `iam_user`: `terraform/hcp-vault/policies/namespace1/pcs/cloudaccount1/non-prod/aws-secrets-test-readonly.json`
+
+Note:
+
+- replace the placeholder role ARN with your real AWS IAM role ARN before apply.
+- in `non-prod.tfvars`, keep `aws_secret_engines` commented until AWS wiring (root config and target roles) is available.
+
+### `terraform/hcp-vault/namespace1` Database secrets examples
+
+The namespace1 non-prod example defines two database secret engine mounts:
+
+- `pcs/cloudaccount1/non-prod/database-postgres`
+- `pcs/cloudaccount1/non-prod/database-mysql`
+
+Each mount includes two database connections and two corresponding dynamic roles:
+
+- Postgres mount (`database-postgres`):
+	- connections: `postgres-app`, `postgres-analytics`
+	- roles: `postgres-app-readonly`, `postgres-analytics-readonly`
+- MySQL mount (`database-mysql`):
+	- connections: `mysql-app`, `mysql-reporting`
+	- roles: `mysql-app-readonly`, `mysql-reporting-readonly`
+
+File:
+
+- examples: `terraform/hcp-vault/namespace1/non-prod.tfvars`
+
+Note:
+
+- in `non-prod.tfvars`, keep `database_secret_engines` and `ldap_secret_engines` commented until backing services are available.
+
+### AWS test databases for Vault database secret engine testing
+
+The AWS stack can create low-cost Amazon RDS test databases in Region 1:
+
+- PostgreSQL in Region 1 (port `5432`)
+- MySQL in Region 1 (port `3306`)
+
+Enable and configure in `terraform/aws/non-prod.tfvars`:
+
+```hcl
+enable_test_databases       = true
+test_database_instance_type = "db.t4g.micro"
+
+test_database_allowed_cidrs = [
+	"10.20.0.0/24",
+	"172.25.16.0/24",
+	"172.28.16.0/24"
+]
+
+test_postgres_username = "vaultadmin"
+test_postgres_password = "replace-me"
+test_postgres_database = "appdb"
+
+test_mysql_username      = "vaultadmin"
+test_mysql_password      = "replace-me"
+test_mysql_database      = "appdb"
+```
+
+Apply AWS stack and read connection outputs:
+
+```bash
+terraform -chdir=terraform/aws apply -var-file=non-prod.tfvars
+terraform -chdir=terraform/aws output test_postgres_connection_host
+terraform -chdir=terraform/aws output test_mysql_connection_host
+```
+
+Use these in `terraform/hcp-vault/namespace1/non-prod.tfvars` under `database_secret_engines`:
+
+- Postgres: `allowed_roles`, `plugin_name = "postgresql-database-plugin"`, host from `test_postgres_connection_host`, port `5432`
+- MySQL: `allowed_roles`, `plugin_name = "mysql-database-plugin"`, host from `test_mysql_connection_host`, port `3306`
 
 Internal vs external group behavior:
 
@@ -131,6 +234,11 @@ Namespace bootstrapping and app-team stacks are also included under `terraform/h
 - `terraform/hcp-vault/namespace1/`
 - `terraform/hcp-vault/modules/`
 - `terraform/hcp-vault/policies/`
+
+Auth and secret-engine modules under `terraform/hcp-vault/modules/` include:
+
+- `oidc/`, `aws_auth/`, `azure_auth/`, `gcp_auth/`, `approle_auth/`
+- `kv_v2/`, `ssh/`, `aws_secrets/`, `database_secrets/`, `ldap_secrets/`, `kubernetes_secrets/`
 
 ## Naming Conventions (Secret Engines and Policies)
 

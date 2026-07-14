@@ -53,3 +53,51 @@ variable "ssh_engines" {
   }))
   default = {}
 }
+
+variable "aws_secret_engines" {
+  description = "AWS secrets engines keyed by mount path following <namespace-team>/<cloud-account>/<environment>/<name>"
+  type = map(object({
+    mount_description    = optional(string, "AWS secrets engine")
+    config_root          = optional(map(any), {})
+    roles                = optional(any, {})
+    disable_delete       = optional(bool, false)
+    ignore_absent_fields = optional(bool, true)
+  }))
+  default = {}
+}
+
+variable "database_secret_engines" {
+  description = "Database secrets engines keyed by mount path following <namespace-team>/<cloud-account>/<environment>/<name>"
+  type = map(object({
+    mount_description    = optional(string, "Database secrets engine")
+    connections          = optional(any, {})
+    roles                = optional(any, {})
+    disable_delete       = optional(bool, false)
+    ignore_absent_fields = optional(bool, true)
+  }))
+  default = {}
+}
+
+variable "ldap_secret_engines" {
+  description = "LDAP secrets engines keyed by mount path following <namespace-team>/<cloud-account>/<environment>/<name>"
+  type = map(object({
+    mount_description    = optional(string, "LDAP secrets engine")
+    config               = optional(map(any), {})
+    roles                = optional(any, {})
+    disable_delete       = optional(bool, false)
+    ignore_absent_fields = optional(bool, true)
+  }))
+  default = {}
+}
+
+variable "kubernetes_secret_engines" {
+  description = "Kubernetes secrets engines keyed by mount path following <namespace-team>/<cloud-account>/<environment>/<name>"
+  type = map(object({
+    mount_description    = optional(string, "Kubernetes secrets engine")
+    config               = optional(map(any), {})
+    roles                = optional(any, {})
+    disable_delete       = optional(bool, false)
+    ignore_absent_fields = optional(bool, true)
+  }))
+  default = {}
+}
