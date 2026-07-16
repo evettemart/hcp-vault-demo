@@ -49,6 +49,17 @@ ssh_engines = {}
 #           permit-pty = ""
 #         }
 #       }
+#
+#       role-admin = {
+#         allowed_users      = "principal-admin"
+#         default_user       = "principal-admin"
+#         ttl                = "1h"
+#         algorithm_signer   = "rsa-sha2-256"
+#         allowed_extensions = "permit-pty,permit-port-forwarding"
+#         default_extensions = {
+#           permit-pty = ""
+#         }
+#       }
 #     }
 #   }
 # }
@@ -211,6 +222,11 @@ ldap_secret_engines = {}
 #         username = "app-service"
 #         dn       = "cn=app-service,ou=users,dc=example,dc=internal"
 #       }
+#
+#       "reporting-user" = {
+#         username = "reporting-service"
+#         dn       = "cn=reporting-service,ou=users,dc=example,dc=internal"
+#       }
 #     }
 #   }
 # }
@@ -234,6 +250,13 @@ kubernetes_secret_engines = {}
 #         generated_role_rules          = "rules:\n- apiGroups: ['']\n  resources: ['pods']\n  verbs: ['get','list']"
 #         token_default_ttl             = 3600
 #         token_max_ttl                 = 14400
+#       }
+#
+#       "deploy-writer" = {
+#         allowed_kubernetes_namespaces = ["apps"]
+#         generated_role_rules          = "rules:\n- apiGroups: ['apps']\n  resources: ['deployments']\n  verbs: ['get','list','watch','create','update','patch']"
+#         token_default_ttl             = 1800
+#         token_max_ttl                 = 7200
 #       }
 #     }
 #   }

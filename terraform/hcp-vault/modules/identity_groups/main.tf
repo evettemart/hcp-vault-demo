@@ -13,9 +13,7 @@ resource "vault_identity_group_alias" "this" {
     for group_name, group_config in var.groups : group_name => group_config
     if lower(group_config.group_type) == "external" &&
     try(group_config.alias_name, null) != null &&
-    trimspace(try(group_config.alias_name, "")) != "" &&
-    var.oidc_accessor != null &&
-    trimspace(var.oidc_accessor) != ""
+    trimspace(try(group_config.alias_name, "")) != ""
   }
 
   namespace      = var.namespace
