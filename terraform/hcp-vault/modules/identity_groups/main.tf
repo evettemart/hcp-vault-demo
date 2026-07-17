@@ -18,6 +18,6 @@ resource "vault_identity_group_alias" "this" {
 
   namespace      = var.namespace
   name           = each.value.alias_name
-  mount_accessor = var.oidc_accessor
+  mount_accessor = lookup(var.group_oidc_accessors, each.key, var.oidc_accessor)
   canonical_id   = vault_identity_group.this[each.key].id
 }
