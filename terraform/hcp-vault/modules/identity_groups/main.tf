@@ -13,13 +13,11 @@ resource "vault_identity_group_alias" "this" {
     for group_name, group_config in var.groups : group_name => group_config
     if lower(group_config.group_type) == "external" &&
     try(group_config.alias_name, null) != null &&
-    trimspace(try(group_config.alias_name, "")) != "" &&
-    var.oidc_accessor != null &&
-    trimspace(var.oidc_accessor) != ""
+    trimspace(try(group_config.alias_name, "")) != ""
   }
 
   namespace      = var.namespace
   name           = each.value.alias_name
-  mount_accessor = var.oidc_accessor
+  mount_accessor = lookup(var.group_oidc_accessors, each.key, var.oidc_accessor)
   canonical_id   = vault_identity_group.this[each.key].id
 }

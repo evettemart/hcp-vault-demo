@@ -5,9 +5,9 @@ resource "vault_mount" "kv_v2" {
 }
 
 resource "vault_kv_secret_backend_v2" "kv_v2" {
-  mount               = vault_mount.kv_v2.path
-  max_versions        = var.max_versions
-  cas_required        = var.cas_required
+  mount                = vault_mount.kv_v2.path
+  max_versions         = var.max_versions
+  cas_required         = var.cas_required
   delete_version_after = var.delete_version_after
 }
 
@@ -15,9 +15,9 @@ locals {
   member_bindings = flatten([
     for team_name, team_cfg in var.teams : [
       for member_name in team_cfg.members : {
-        team       = team_name
-        member     = member_name
-        key        = "${team_name}/${member_name}"
+        team        = team_name
+        member      = member_name
+        key         = "${team_name}/${member_name}"
         policy_name = regexreplace("${var.policy_name_prefix}-${team_name}-${member_name}", "[^a-zA-Z0-9_-]", "-")
       }
     ]

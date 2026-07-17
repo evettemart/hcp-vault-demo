@@ -212,3 +212,75 @@ output "tgw_region_6_share_arn" {
   description = "Region 6 RAM share ARN for TGW"
   value       = try(module.tgw_region_6[0].resource_share_arn, null)
 }
+
+output "test_databases_enabled" {
+  description = "Whether RDS-based test databases are enabled in Region 1"
+  value       = var.enable_test_databases
+}
+
+output "test_database_allowed_cidrs" {
+  description = "CIDRs allowed to access Region 1 test database ports"
+  value       = local.test_database_allowed_cidrs_region_1
+}
+
+output "test_postgres_private_ip" {
+  description = "Region 1 PostgreSQL RDS endpoint address"
+  value       = try(module.test_postgres_region_1[0].address, null)
+}
+
+output "test_postgres_public_ip" {
+  description = "Region 1 PostgreSQL RDS endpoint address"
+  value       = try(module.test_postgres_region_1[0].address, null)
+}
+
+output "test_postgres_connection_host" {
+  description = "Region 1 PostgreSQL endpoint host for Vault test connections"
+  value       = try(module.test_postgres_region_1[0].address, null)
+}
+
+output "test_postgres_connection_port" {
+  description = "Region 1 PostgreSQL port for test connections"
+  value       = try(module.test_postgres_region_1[0].port, null)
+}
+
+output "test_postgres_connection_username" {
+  description = "Region 1 PostgreSQL master username"
+  value       = var.test_postgres_username
+}
+
+output "test_postgres_connection_password" {
+  description = "Region 1 PostgreSQL master password"
+  value       = var.test_postgres_password
+  sensitive   = true
+}
+
+output "test_mysql_private_ip" {
+  description = "Region 1 MySQL RDS endpoint address"
+  value       = try(module.test_mysql_region_1[0].address, null)
+}
+
+output "test_mysql_public_ip" {
+  description = "Region 1 MySQL RDS endpoint address"
+  value       = try(module.test_mysql_region_1[0].address, null)
+}
+
+output "test_mysql_connection_host" {
+  description = "Region 1 MySQL endpoint host for Vault test connections"
+  value       = try(module.test_mysql_region_1[0].address, null)
+}
+
+output "test_mysql_connection_port" {
+  description = "Region 1 MySQL port for test connections"
+  value       = try(module.test_mysql_region_1[0].port, null)
+}
+
+output "test_mysql_connection_username" {
+  description = "Region 1 MySQL master username"
+  value       = var.test_mysql_username
+}
+
+output "test_mysql_connection_password" {
+  description = "Region 1 MySQL master password"
+  value       = var.test_mysql_password
+  sensitive   = true
+}

@@ -212,11 +212,13 @@ variable "namespace_groups" {
   description = "Namespace-specific identity group configuration keyed by namespace. Use the admin_namespace key (for example, admin) for admin groups, and child namespace keys (for example, namespace1) for namespaces under admin."
   type = map(object({
     oidc_accessor = optional(string)
+    oidc_mount    = optional(string)
     groups = map(object({
       group_type       = string
       policies         = optional(list(string), [])
       member_group_ids = optional(list(string), [])
       alias_name       = optional(string)
+      oidc_mount       = optional(string)
     }))
   }))
   default = {}

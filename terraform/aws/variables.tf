@@ -353,3 +353,77 @@ variable "tags" {
     Project   = "hcp-vault-demo"
   }
 }
+
+variable "enable_test_databases" {
+  description = "Create low-cost RDS PostgreSQL and MySQL test databases in Region 1 for Vault database secret engine testing"
+  type        = bool
+  default     = false
+}
+
+variable "test_database_subnet_type" {
+  description = "Deprecated. RDS databases are placed in DB subnet groups derived from regional network subnets"
+  type        = string
+  default     = "public"
+
+  validation {
+    condition     = contains(["public", "private"], var.test_database_subnet_type)
+    error_message = "test_database_subnet_type must be one of: public, private."
+  }
+}
+
+variable "test_database_instance_type" {
+  description = "RDS instance class used for test databases"
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "test_database_allowed_cidrs" {
+  description = "CIDR ranges allowed to access Region 1 test database ports (5432 and 3306). If empty, Region 1 VPC and non-prod HVN CIDRs are allowed."
+  type        = list(string)
+  default     = []
+}
+
+variable "test_postgres_username" {
+  description = "Master username for test PostgreSQL RDS instances"
+  type        = string
+  default     = "vaultadmin"
+}
+
+variable "test_postgres_password" {
+  description = "Master password for test PostgreSQL RDS instances"
+  type        = string
+  default     = "replace-me"
+  sensitive   = true
+}
+
+variable "test_postgres_database" {
+  description = "Initial database name for test PostgreSQL RDS instances"
+  type        = string
+  default     = "appdb"
+}
+
+variable "test_mysql_username" {
+  description = "Master username for test MySQL RDS instances"
+  type        = string
+  default     = "vaultadmin"
+}
+
+variable "test_mysql_password" {
+  description = "Master password for test MySQL RDS instances"
+  type        = string
+  default     = "replace-me"
+  sensitive   = true
+}
+
+variable "test_mysql_database" {
+  description = "Initial database name for test MySQL RDS instances"
+  type        = string
+  default     = "appdb"
+}
+
+variable "test_mysql_root_password" {
+  description = "Deprecated. Not used with RDS-based test MySQL databases"
+  type        = string
+  default     = "replace-me-root"
+  sensitive   = true
+}

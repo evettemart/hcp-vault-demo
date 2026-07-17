@@ -171,13 +171,25 @@ configure_oidc = false
 # }
 
 # Optional: manage identity groups per namespace.
-# For the admin namespace, if configure_oidc=true, the OIDC accessor is inferred
-# from the configured OIDC backend unless explicitly provided here.
+# External groups get an OIDC mount accessor so aliases map to the right auth
+# backend. You do NOT need to paste the accessor ID: reference the OIDC mount by
+# name via `oidc_mount` (the key used in oidc_auth_methods) and Terraform
+# resolves the accessor from the deployed OIDC module output.
+#
+# Accessor resolution order (per group):
+#   1. group `oidc_mount`      -> module.oidc_admin[<mount>].accessor
+#   2. namespace `oidc_mount`  -> module.oidc_admin[<mount>].accessor
+#   3. namespace `oidc_accessor` literal (back-compat, discouraged)
+#   4. inferred admin default when exactly one OIDC method exists (or key `oidc`)
+#
 # Keys should be: `admin` for admin namespace groups, and child names like
 # `namespace1` for admin/namespace1. Do not prefix child keys with `admin/`.
 # namespace_groups = {
 #   admin = {
+#     # Two OIDC backends (oidc and oidc_alt from oidc_auth_methods) each own a
+#     # set of external groups. Set oidc_mount per group to bind it to a backend.
 #     groups = {
+#       # --- Groups for the primary OIDC backend (oidc) ---
 #       "PPC-VAULT-ADMINS" = {
 #         group_type = "internal"
 #         policies   = ["policy-admin"]
@@ -190,19 +202,27 @@ configure_oidc = false
 #         # pcs/cloudaccount1/non-prod/kv-v2-test-consumer
 #         policies   = ["pcs/cloudaccount1/non-prod/kv-v2-test-consumer"]
 #         alias_name = "<azure-group-object-id>"
+#         oidc_mount = "oidc"
 #       }
-#     }
-#   }
-#   namespace1 = {
-#     # Optional override. If omitted, namespace groups use the inferred admin
-#     # OIDC accessor when exactly one OIDC method is configured (or key `oidc`
-#     # exists in oidc_auth_methods).
-#     oidc_accessor = "auth_oidc_xxxxxxxx"
-#     groups = {
-#       "NS1-DEVS" = {
+#       "PLATFORM-ADMINS" = {
+#         group_type = "external"
+#         policies   = ["policy-admin"]
+#         alias_name = "<platform-admins-azure-group-object-id>"
+#         oidc_mount = "oidc"
+#       }
+#
+#       # --- Groups for the alternate OIDC backend (oidc_alt) ---
+#       "PARTNER-USERS" = {
+#         group_type = "external"
+#         policies   = ["pcs/cloudaccount1/non-prod/kv-v2-test-consumer"]
+#         alias_name = "<partner-azure-group-object-id>"
+#         oidc_mount = "oidc_alt"
+#       }
+#       "PARTNER-ADMINS" = {
 #         group_type = "external"
 #         policies   = ["pcs/cloudaccount1/non-prod/kv-v2-test-writer"]
-#         alias_name = "<namespace1-azure-group-object-id>"
+#         alias_name = "<partner-admins-azure-group-object-id>"
+#         oidc_mount = "oidc_alt"
 #       }
 #     }
 #   }

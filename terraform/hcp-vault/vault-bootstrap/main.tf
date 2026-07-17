@@ -14,10 +14,10 @@ locals {
       }
     } : {}
   )
-  configure_oidc_effective = length(local.oidc_auth_methods_effective) > 0
-  configure_aws_auth_effective   = length(var.aws_auth_methods) > 0
-  configure_azure_auth_effective = length(var.azure_auth_methods) > 0
-  configure_gcp_auth_effective   = length(var.gcp_auth_methods) > 0
+  configure_oidc_effective         = length(local.oidc_auth_methods_effective) > 0
+  configure_aws_auth_effective     = length(var.aws_auth_methods) > 0
+  configure_azure_auth_effective   = length(var.azure_auth_methods) > 0
+  configure_gcp_auth_effective     = length(var.gcp_auth_methods) > 0
   configure_approle_auth_effective = length(var.approle_auth_methods) > 0
 
   disabled_auth_types = toset(concat(
@@ -32,7 +32,7 @@ locals {
     for mount_path, config in var.auth_methods :
     mount_path => config
     if !contains(local.disabled_auth_types, lower(config.type))
-  } : {
+    } : {
     for mount_path, config in var.auth_methods :
     mount_path => config
     if !contains(local.disabled_auth_types, lower(config.type))
@@ -50,9 +50,13 @@ locals {
     var.policies
   )
 
+  oidc_accessors_by_mount = {
+    for mount_path, mod in module.oidc_admin : mount_path => mod.accessor
+  }
+
   admin_default_oidc_accessor = length(module.oidc_admin) == 1 ? one([
     for mount_path, mod in module.oidc_admin : mod.accessor
-  ]) : (
+    ]) : (
     contains(keys(module.oidc_admin), "oidc") ? module.oidc_admin["oidc"].accessor : null
   )
 
@@ -61,13 +65,31 @@ locals {
     namespace_name => (
       try(namespace_config.oidc_accessor, null) != null && trimspace(try(namespace_config.oidc_accessor, "")) != ""
       ? namespace_config.oidc_accessor
+      : try(namespace_config.oidc_mount, null) != null
+      ? lookup(local.oidc_accessors_by_mount, namespace_config.oidc_mount, local.admin_default_oidc_accessor)
       : local.admin_default_oidc_accessor
     )
+  }
+
+  namespace_group_oidc_accessors = {
+    for namespace_name, namespace_config in var.namespace_groups :
+    namespace_name => {
+      for group_name, accessor in {
+        for group_name, group_config in namespace_config.groups :
+        group_name => (
+          try(group_config.oidc_mount, null) != null
+          ? lookup(local.oidc_accessors_by_mount, group_config.oidc_mount, null)
+          : try(namespace_config.oidc_mount, null) != null
+          ? lookup(local.oidc_accessors_by_mount, namespace_config.oidc_mount, null)
+          : null
+        )
+      } : group_name => accessor if accessor != null
+    }
   }
 }
 
 module "oidc_admin" {
-  source = "../modules/oidc"
+  source   = "../modules/oidc"
   for_each = local.oidc_auth_methods_effective
 
   providers = {
@@ -185,9 +207,10 @@ module "identity_groups" {
     vault = vault.admin
   }
 
-  namespace     = each.key == var.admin_namespace ? null : each.key
-  oidc_accessor = lookup(local.namespace_oidc_accessors, each.key, null)
-  groups        = each.value.groups
+  namespace            = each.key == var.admin_namespace ? null : each.key
+  oidc_accessor        = lookup(local.namespace_oidc_accessors, each.key, null)
+  group_oidc_accessors = lookup(local.namespace_group_oidc_accessors, each.key, {})
+  groups               = each.value.groups
 
   depends_on = [vault_namespace.admin_children]
 }

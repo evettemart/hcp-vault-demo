@@ -39,3 +39,75 @@ output "ssh_role_names_by_mount" {
     mount_path => mod.role_names
   }
 }
+
+output "aws_secret_mount_paths" {
+  description = "AWS secret engine mount paths"
+  value = {
+    for mount_path, mod in module.aws_secrets :
+    mount_path => mod.mount_path
+  }
+}
+
+output "aws_secret_role_names_by_mount" {
+  description = "AWS secret engine role names by mount path"
+  value = {
+    for mount_path, mod in module.aws_secrets :
+    mount_path => mod.role_names
+  }
+}
+
+output "database_secret_mount_paths" {
+  description = "Database secret engine mount paths"
+  value = {
+    for mount_path, mod in module.database_secrets :
+    mount_path => mod.mount_path
+  }
+}
+
+output "database_connection_names_by_mount" {
+  description = "Database connection names by mount path"
+  value = {
+    for mount_path, mod in module.database_secrets :
+    mount_path => mod.connection_names
+  }
+}
+
+output "database_role_names_by_mount" {
+  description = "Database role names by mount path"
+  value = {
+    for mount_path, mod in module.database_secrets :
+    mount_path => mod.role_names
+  }
+}
+
+output "ldap_secret_mount_paths" {
+  description = "LDAP secret engine mount paths"
+  value = {
+    for mount_path, mod in module.ldap_secrets :
+    mount_path => mod.mount_path
+  }
+}
+
+output "ldap_secret_role_names_by_mount" {
+  description = "LDAP secret engine role names by mount path"
+  value = {
+    for mount_path, mod in module.ldap_secrets :
+    mount_path => mod.role_names
+  }
+}
+
+output "kubernetes_secret_mount_paths" {
+  description = "Kubernetes secret engine mount paths"
+  value = {
+    for mount_path, mod in module.kubernetes_secrets :
+    mount_path => mod.mount_path
+  }
+}
+
+output "kubernetes_secret_role_names_by_mount" {
+  description = "Kubernetes secret engine role names by mount path"
+  value = {
+    for mount_path, mod in module.kubernetes_secrets :
+    mount_path => mod.role_names
+  }
+}

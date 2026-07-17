@@ -59,3 +59,18 @@ hvn_region_1_dr_for_region_3_cidr = "172.30.16.0/24"
 #
 # hvn_region_1_primary_cidr         = "172.25.16.0/24"
 # hvn_region_2_dr_for_region_1_cidr = "172.28.16.0/24"
+
+# Optional: test databases for Vault database secret engine validation
+# enable_test_databases     = true
+# test_database_instance_type = "db.t4g.micro"
+# test_database_allowed_cidrs = [
+#   "10.20.0.0/24",      # region 1 VPC
+#   "172.25.16.0/24",    # HVN region 1 primary
+#   "172.28.16.0/24"     # HVN region 2 DR for region 1
+# ]
+# test_postgres_username = "vaultadmin"
+# test_postgres_password = "replace-me"
+# test_postgres_database = "appdb"
+# test_mysql_username    = "vaultadmin"
+# test_mysql_password    = "replace-me"
+# test_mysql_database    = "appdb"

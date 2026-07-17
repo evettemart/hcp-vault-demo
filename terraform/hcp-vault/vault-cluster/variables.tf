@@ -61,14 +61,14 @@ variable "vault_ip_allowlist" {
 variable "cluster_configs" {
   description = "Cluster map keyed by cluster_1..cluster_6 containing HVN and cluster configuration."
   type = map(object({
-    hvn_id     = string
-    hvn_region = string
-    hvn_cidr   = string
-    cluster_id = optional(string)
-    tier       = optional(string, "plus_small")
+    hvn_id            = string
+    hvn_region        = string
+    hvn_cidr          = string
+    cluster_id        = optional(string)
+    tier              = optional(string, "plus_small")
     tgw_attachment_id = optional(string)
-    peering_id = optional(string)
-    route_id   = optional(string)
+    peering_id        = optional(string)
+    route_id          = optional(string)
   }))
 }
 
