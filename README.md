@@ -77,9 +77,14 @@ route tables/UDRs/NVA config must be managed separately.
 Bootstraps the admin namespace: baseline policies (`policies/admin`), auth methods, child
 namespaces, and identity groups.
 
-Supported auth methods: `oidc`/`jwt` via `auth_methods`, plus configurable backends via
-`oidc_auth_methods`, `aws_auth_methods`, `azure_auth_methods`, `gcp_auth_methods`,
-`approle_auth_methods`.
+Supported auth methods:
+
+- `oidc` / `jwt` via `auth_methods`
+- OIDC backends via `oidc_auth_methods`
+- AWS backends via `aws_auth_methods`
+- Azure backends via `azure_auth_methods`
+- GCP backends via `gcp_auth_methods`
+- AppRole backends via `approle_auth_methods`
 
 #### Identity groups
 
@@ -141,8 +146,18 @@ convention above.
 3. Create a service account with admin access; add `HCP_CLIENT_ID` and `HCP_CLIENT_SECRET` to `.env`.
 4. `source .env` before running Terraform.
 
-Required environment variables: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`,
-`HCP_CLIENT_ID`, `HCP_CLIENT_SECRET`. Optional: `VAULT_ADDR`, `VAULT_TOKEN`.
+Required environment variables:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_REGION`
+- `HCP_CLIENT_ID`
+- `HCP_CLIENT_SECRET`
+
+Optional:
+
+- `VAULT_ADDR`
+- `VAULT_TOKEN`
 
 Create per-environment tfvars from the examples and set the matching HCP project ID and
 `topology_scenario` in each:
@@ -209,33 +224,6 @@ terraform -chdir=terraform/hcp-vault/vault-cluster init -reconfigure
 terraform -chdir=terraform/hcp-vault/vault-cluster workspace new "$TF_AZURE_ENV" || terraform -chdir=terraform/hcp-vault/vault-cluster workspace select "$TF_AZURE_ENV"
 terraform -chdir=terraform/hcp-vault/vault-cluster apply -var-file="$TF_AZURE_ENV.tfvars"
 terraform -chdir=terraform/hcp-vault/vault-cluster plan  -var-file="$TF_AZURE_ENV.tfvars"
-```
-
-## RDS Test Databases
-
-Enable in `terraform/aws/non-prod.tfvars`:
-
-```hcl
-enable_test_databases       = true
-test_database_instance_type = "db.t4g.micro"
-test_database_allowed_cidrs = ["10.20.0.0/24"]
-
-test_postgres_username = "vaultadmin"
-test_postgres_password = "replace-me"
-test_postgres_database = "appdb"
-
-test_mysql_username = "vaultadmin"
-test_mysql_password = "replace-me"
-test_mysql_database = "appdb"
-```
-
-Read connection outputs and wire them into `namespace1/non-prod.tfvars` under
-`database_secret_engines` (Postgres: `postgresql-database-plugin`, port 5432; MySQL:
-`mysql-database-plugin`, port 3306):
-
-```bash
-terraform -chdir=terraform/aws output test_postgres_connection_host
-terraform -chdir=terraform/aws output test_mysql_connection_host
 ```
 
 ## KV v2 Module
